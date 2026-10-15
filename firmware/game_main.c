@@ -113,7 +113,7 @@ static controls_screen screen(void) {
     case GAME_TITLE:
         return CONTROLS_TITLE;
     case GAME_PAUSED:
-        return CONTROLS_PAUSE;
+        return game.pause_settings ? CONTROLS_SETTINGS : CONTROLS_PAUSE;
     case GAME_OVER:
         return CONTROLS_GAME_OVER;
     default:
@@ -155,6 +155,7 @@ static void simulate(void) {
         last_motion = sample.motion;
         have_motion = true;
     }
+    sample.tilt_sensitivity_percent = game.settings.tilt_sensitivity_percent;
     controls_output local = controls_update(&controls, sample, screen());
     if (local.reboot_requested) {
         watchdog_reboot(0, 0, 10);
@@ -173,6 +174,8 @@ static void simulate(void) {
         adapter.input.start = adapter.input.start || local.input.start;
         adapter.input.pause = adapter.input.pause || local.input.pause;
         adapter.input.quit = adapter.input.quit || local.input.quit;
+        if (local.input.menu_action != GAME_MENU_NONE)
+            adapter.input.menu_action = local.input.menu_action;
         gyrus_debug_game_tick(&adapter);
         adapter.input.turn = retained.turn;
         adapter.input.fire = retained.fire;
@@ -263,7 +266,8 @@ static bool debug_state(void *context, char *out, size_t capacity) {
         ",\"last_present_us\":%" PRIu32 ",\"max_present_us\":%" PRIu32 ",\"sim_max_us\":%" PRIu32
         ",\"touch_errors\":%" PRIu32 ",\"touch_irq\":%u,\"bootsel_read_failures\":%" PRIu32
         ",\"sim_overruns\":%" PRIu32 ",\"control_mode\":%u,\"imu_ok\":%s,"
-        "\"imu_revision\":%u,\"motion_age_ms\":%" PRIu32 ",\"accel_mg\":[%" PRId32 ",%" PRId32 ",%" PRId32 "],"
+        "\"imu_revision\":%u,\"motion_age_ms\":%" PRIu32 ",\"accel_mg\":[%" PRId32 ",%" PRId32
+        ",%" PRId32 "],"
         "\"gyro_mdps\":[%" PRId32 ",%" PRId32 ",%" PRId32 "]}}",
         clock_get_hz(clk_sys), clock_get_hz(clk_peri), lcd_baud, lcd_ok ? "false" : "true",
         lcd_error_count, rendered_frames, presented_frames, dropped_frames, render_last_us,

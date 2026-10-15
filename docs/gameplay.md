@@ -15,7 +15,11 @@ surviving lone emitter has no connecting beam. Shooting the satellite awards
 double fire. Losing a life removes double fire, clears projectiles and gives a
 short period of invulnerability. The game ends after the final life.
 
-Autofire produces five volleys per second (paired shots after a power-up).
+Autofire defaults to five volleys per second (paired shots after a power-up).
+Pause → Settings adjusts fire rate from 1–10 volleys/s, enemy pace 25–200%, and
+tilt sensitivity 50–200%. Changes apply when resumed and survive new games,
+returning to defaults after reboot. Enemy pace scales waves, attack phases,
+lifetimes and hostile shots together, while player motion remains at 60 Hz.
 Enemy rotation, dives, return paths, meteors and hostile projectiles were slowed
 by roughly one-third after physical play testing. Split touch steering is
 inverted: left touch turns clockwise; right touch turns counterclockwise.
@@ -33,10 +37,10 @@ spiraling enemies without collision deaths. Perfect completion awards an extra
 10,000 points. Subsequent planetary groups use three regular warps and one
 chance stage. Completing the route repeats with increased difficulty.
 
-See [controls](controls.md) for the two steering modes and pause menu, and
+See [controls](controls.md) for the three steering modes and pause menu, and
 [debug protocol](debug-protocol.md) for capture, state, stage selection and
-scripted input. The onboard IMU and audio are not used by the game. This board
-has no onboard speaker or audio output stage.
+scripted input. The onboard IMU drives tilt steering. This board has no onboard speaker or
+audio output stage.
 
 Tilt is the third selectable steering mode. Hold the device comfortably still
 for half a second at start/resume; that pose becomes neutral. Bank left/right

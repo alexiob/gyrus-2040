@@ -52,6 +52,12 @@ def run():
             ('earth', ['LEVEL 23', 'STEP 300']),
             ('next-route', ['LEVEL 24', 'STEP 600']),
             ('menu', ['INPUT pause=1', 'STEP 1']),
+            ('settings-default', ['INPUT menu=1', 'STEP 1']),
+            ('settings-adjusted', ['INPUT menu=3', 'STEP 1', 'INPUT menu=5', 'STEP 1', 'INPUT menu=8', 'STEP 1']),
+            ('settings-min', ['SET fire_rate 1', 'SET enemy_speed 25', 'SET tilt_sensitivity 50']),
+            ('settings-max', ['SET fire_rate 10', 'SET enemy_speed 200', 'SET tilt_sensitivity 200']),
+            ('settings-back', ['INPUT menu=2', 'STEP 1']),
+            ('settings-resumed', ['INPUT pause=1', 'STEP 120']),
         ]
         for label, commands in cases:
             for command in commands:

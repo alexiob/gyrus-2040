@@ -86,6 +86,30 @@ int main(void) {
     request(&protocol, "G1 15 STATE\n");
     assert(strstr(output, "\"stage\":12"));
     assert(strstr(output, "\"hash\":"));
+    request(&protocol, "G1 20 INPUT pause=1\n");
+    request(&protocol, "G1 21 STEP 1\n");
+    request(&protocol, "G1 22 INPUT menu=1\n");
+    request(&protocol, "G1 23 STEP 2\n");
+    assert(game.phase == GAME_PAUSED && game.pause_settings);
+    assert(adapter.input.menu_action == GAME_MENU_NONE);
+    request(&protocol, "G1 24 INPUT menu=4\n");
+    request(&protocol, "G1 25 STEP 5\n");
+    assert(game.settings.fire_rate == 6); /* A pulse, not five repeated increases. */
+    request(&protocol, "G1 26 SET fire_rate 11\n");
+    assert(strstr(output, "\"ok\":false"));
+    request(&protocol, "G1 27 SET enemy_speed 26\n");
+    assert(strstr(output, "\"ok\":false"));
+    request(&protocol, "G1 28 SET tilt_sensitivity 49\n");
+    assert(strstr(output, "\"ok\":false"));
+    request(&protocol, "G1 29 SET fire_rate 7\n");
+    request(&protocol, "G1 30 SET enemy_speed 50\n");
+    request(&protocol, "G1 31 SET tilt_sensitivity 150\n");
+    request(&protocol, "G1 32 STATE\n");
+    assert(strstr(output, "\"fire_rate\":7") && strstr(output, "\"enemy_speed\":50") &&
+           strstr(output, "\"tilt_sensitivity\":150"));
+    request(&protocol, "G1 33 RESET 123\n");
+    assert(game.settings.fire_rate == 5 && game.settings.enemy_speed_percent == 100 &&
+           game.settings.tilt_sensitivity_percent == 100 && !game.pause_settings);
     puts("game debug adapter tests passed");
     return 0;
 }

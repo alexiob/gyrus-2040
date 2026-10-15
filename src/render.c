@@ -152,10 +152,10 @@ static void button(uint8_t *fb, int x0, int y0, int x1, int y1, const char *word
                    int scale) {
     fill(fb, x0, y0, x1 - x0, y1 - y0, BLACK);
     /* The entire visual border matches the controls module's half-open bounds. */
-    line(fb, x0 + 3, y0, x1 - 4, y0, DARK);
-    line(fb, x0 + 3, y1 - 1, x1 - 4, y1 - 1, DARK);
-    line(fb, x0, y0 + 3, x0, y1 - 4, DARK);
-    line(fb, x1 - 1, y0 + 3, x1 - 1, y1 - 4, DARK);
+    line(fb, x0, y0, x1 - 1, y0, DARK);
+    line(fb, x0, y1 - 1, x1 - 1, y1 - 1, DARK);
+    line(fb, x0, y0, x0, y1 - 1, DARK);
+    line(fb, x1 - 1, y0, x1 - 1, y1 - 1, DARK);
     line(fb, x0, y0, x0 + 8, y0, color);
     line(fb, x0, y0, x0, y0 + 5, color);
     line(fb, x1 - 9, y1 - 1, x1 - 1, y1 - 1, color);
@@ -384,6 +384,50 @@ static void intermission(const game_state *g, uint8_t *fb, bool arrival) {
     if (!arrival && (g->phase_ticks / 15u) % 2u == 0u)
         centered(fb, "READY", 207, IVORY, 1);
 }
+typedef struct {
+    int x0, y0, x1, y1;
+} settings_rect;
+static void settings_row(uint8_t *fb, const char *name, uint32_t value, const char *unit,
+                         int label_y, settings_rect down, settings_rect up, uint32_t minimum,
+                         uint32_t maximum) {
+    char number[11];
+    char display[14];
+    decimal(number, value, 1);
+    size_t length = strlen(number);
+    memcpy(display, number, length);
+    for (size_t i = 0; unit[i] != '\0' && length + 1u < sizeof display; ++i)
+        display[length++] = unit[i];
+    display[length] = '\0';
+    centered(fb, name, label_y, STEEL, 1);
+    button(fb, down.x0, down.y0, down.x1, down.y1, "-", value <= minimum ? STEEL : CYAN, 2);
+    button(fb, up.x0, up.y0, up.x1, up.y1, "+", value >= maximum ? STEEL : CYAN, 2);
+    centered(fb, display, (down.y0 + down.y1 - 14) / 2, IVORY, 2);
+}
+static void settings_page(const game_state *g, uint8_t *fb) {
+    static const settings_rect rows[3][2] = {
+        {{(int)CONTROLS_FIRE_DOWN_X0, (int)CONTROLS_FIRE_DOWN_Y0, (int)CONTROLS_FIRE_DOWN_X1,
+          (int)CONTROLS_FIRE_DOWN_Y1},
+         {(int)CONTROLS_FIRE_UP_X0, (int)CONTROLS_FIRE_UP_Y0, (int)CONTROLS_FIRE_UP_X1,
+          (int)CONTROLS_FIRE_UP_Y1}},
+        {{(int)CONTROLS_ENEMY_DOWN_X0, (int)CONTROLS_ENEMY_DOWN_Y0, (int)CONTROLS_ENEMY_DOWN_X1,
+          (int)CONTROLS_ENEMY_DOWN_Y1},
+         {(int)CONTROLS_ENEMY_UP_X0, (int)CONTROLS_ENEMY_UP_Y0, (int)CONTROLS_ENEMY_UP_X1,
+          (int)CONTROLS_ENEMY_UP_Y1}},
+        {{(int)CONTROLS_TILT_DOWN_X0, (int)CONTROLS_TILT_DOWN_Y0, (int)CONTROLS_TILT_DOWN_X1,
+          (int)CONTROLS_TILT_DOWN_Y1},
+         {(int)CONTROLS_TILT_UP_X0, (int)CONTROLS_TILT_UP_Y0, (int)CONTROLS_TILT_UP_X1,
+          (int)CONTROLS_TILT_UP_Y1}},
+    };
+    centered(fb, "SETTINGS", 28, IVORY, 2);
+    centered(fb, "TAP +/- TO ADJUST", 49, STEEL, 1);
+    settings_row(fb, "FIRE RATE", g->settings.fire_rate, "/S", 66, rows[0][0], rows[0][1], 1, 10);
+    settings_row(fb, "ENEMY SPEED", g->settings.enemy_speed_percent, "%", 112, rows[1][0],
+                 rows[1][1], 25, 200);
+    settings_row(fb, "TILT SENS", g->settings.tilt_sensitivity_percent, "%", 158, rows[2][0],
+                 rows[2][1], 50, 200);
+    button(fb, (int)CONTROLS_BACK_X0, (int)CONTROLS_BACK_Y0, (int)CONTROLS_BACK_X1,
+           (int)CONTROLS_BACK_Y1, "BACK", CYAN, 2);
+}
 static void pause_menu(const game_state *g, uint8_t *fb) {
     static const uint8_t dim[GYRUS_COLOR_COUNT] = {
         BLACK, DARK, DARK, DEEP_BLUE, DEEP_BLUE, DEEP_BLUE, DARK,      DARK,
@@ -391,12 +435,18 @@ static void pause_menu(const game_state *g, uint8_t *fb) {
         BLACK, DARK, DARK, DARK,      DARK,      DARK,      DARK,      DEEP_BLUE};
     for (unsigned i = 0; i < GAME_WIDTH * GAME_HEIGHT; ++i)
         fb[i] = fb[i] < GYRUS_COLOR_COUNT ? dim[fb[i]] : BLACK;
-    fill(fb, 43, 43, 154, 190, BLACK);
-    centered(fb, "PAUSED", 48, IVORY, 2);
-    centered(fb, "FLIGHT ON HOLD", 68, STEEL, 1);
+    fill(fb, 35, 27, 170, 207, BLACK);
+    if (g->pause_settings) {
+        settings_page(g, fb);
+        return;
+    }
+    centered(fb, "PAUSED", 33, IVORY, 2);
+    centered(fb, "FLIGHT ON HOLD", 52, STEEL, 1);
     button(fb, (int)CONTROLS_RESUME_X0, (int)CONTROLS_RESUME_Y0, (int)CONTROLS_RESUME_X1,
            (int)CONTROLS_RESUME_Y1, "RESUME", CYAN, 2);
     menu_mode(g, fb, true);
+    button(fb, (int)CONTROLS_SETTINGS_X0, (int)CONTROLS_SETTINGS_Y0, (int)CONTROLS_SETTINGS_X1,
+           (int)CONTROLS_SETTINGS_Y1, "SETTINGS", IVORY, 2);
     button(fb, (int)CONTROLS_QUIT_X0, (int)CONTROLS_QUIT_Y0, (int)CONTROLS_QUIT_X1,
            (int)CONTROLS_QUIT_Y1, "QUIT", IVORY, 2);
     button(fb, (int)CONTROLS_REBOOT_X0, (int)CONTROLS_REBOOT_Y0, (int)CONTROLS_REBOOT_X1,
@@ -406,7 +456,7 @@ static void pause_menu(const game_state *g, uint8_t *fb) {
         const int width = (int)(progress * (CONTROLS_REBOOT_X1 - CONTROLS_REBOOT_X0 - 4u) / 1000u);
         fill(fb, (int)CONTROLS_REBOOT_X0 + 2, (int)CONTROLS_REBOOT_Y1 - 4, width, 2, AMBER);
     }
-    centered(fb, "BOOT ALSO RESUMES", 215, STEEL, 1);
+    centered(fb, "BOOT ALSO RESUMES", 219, STEEL, 1);
 }
 void game_render(const game_state *g, uint8_t framebuffer[GAME_WIDTH * GAME_HEIGHT]) {
     memset(framebuffer, BLACK, GAME_WIDTH * GAME_HEIGHT);

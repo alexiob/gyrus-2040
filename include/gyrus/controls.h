@@ -15,20 +15,52 @@
 #define CONTROLS_MODE_Y1 177u
 #define CONTROLS_RESUME_X0 60u
 #define CONTROLS_RESUME_X1 180u
-#define CONTROLS_RESUME_Y0 80u
-#define CONTROLS_RESUME_Y1 104u
+#define CONTROLS_RESUME_Y0 68u
+#define CONTROLS_RESUME_Y1 92u
 #define CONTROLS_PAUSE_MODE_X0 48u
 #define CONTROLS_PAUSE_MODE_X1 192u
-#define CONTROLS_PAUSE_MODE_Y0 115u
-#define CONTROLS_PAUSE_MODE_Y1 137u
+#define CONTROLS_PAUSE_MODE_Y0 98u
+#define CONTROLS_PAUSE_MODE_Y1 122u
 #define CONTROLS_QUIT_X0 60u
 #define CONTROLS_QUIT_X1 180u
-#define CONTROLS_QUIT_Y0 145u
-#define CONTROLS_QUIT_Y1 169u
+#define CONTROLS_QUIT_Y0 158u
+#define CONTROLS_QUIT_Y1 182u
 #define CONTROLS_REBOOT_X0 68u
 #define CONTROLS_REBOOT_X1 172u
-#define CONTROLS_REBOOT_Y0 181u
-#define CONTROLS_REBOOT_Y1 205u
+#define CONTROLS_REBOOT_Y0 188u
+#define CONTROLS_REBOOT_Y1 212u
+#define CONTROLS_SETTINGS_X0 60u
+#define CONTROLS_SETTINGS_X1 180u
+#define CONTROLS_SETTINGS_Y0 128u
+#define CONTROLS_SETTINGS_Y1 152u
+#define CONTROLS_FIRE_DOWN_X0 42u
+#define CONTROLS_FIRE_DOWN_X1 80u
+#define CONTROLS_FIRE_DOWN_Y0 78u
+#define CONTROLS_FIRE_DOWN_Y1 106u
+#define CONTROLS_FIRE_UP_X0 160u
+#define CONTROLS_FIRE_UP_X1 198u
+#define CONTROLS_FIRE_UP_Y0 78u
+#define CONTROLS_FIRE_UP_Y1 106u
+#define CONTROLS_ENEMY_DOWN_X0 42u
+#define CONTROLS_ENEMY_DOWN_X1 80u
+#define CONTROLS_ENEMY_DOWN_Y0 124u
+#define CONTROLS_ENEMY_DOWN_Y1 152u
+#define CONTROLS_ENEMY_UP_X0 160u
+#define CONTROLS_ENEMY_UP_X1 198u
+#define CONTROLS_ENEMY_UP_Y0 124u
+#define CONTROLS_ENEMY_UP_Y1 152u
+#define CONTROLS_TILT_DOWN_X0 42u
+#define CONTROLS_TILT_DOWN_X1 80u
+#define CONTROLS_TILT_DOWN_Y0 170u
+#define CONTROLS_TILT_DOWN_Y1 198u
+#define CONTROLS_TILT_UP_X0 160u
+#define CONTROLS_TILT_UP_X1 198u
+#define CONTROLS_TILT_UP_Y0 170u
+#define CONTROLS_TILT_UP_Y1 198u
+#define CONTROLS_BACK_X0 78u
+#define CONTROLS_BACK_X1 162u
+#define CONTROLS_BACK_Y0 205u
+#define CONTROLS_BACK_Y1 229u
 #define CONTROLS_CENTER_X 120
 #define CONTROLS_CENTER_Y 120
 #define CONTROLS_CENTER_RADIUS 36
@@ -49,14 +81,28 @@ typedef struct {
     int32_t gyro_mdps[3];
     uint32_t sampled_ms;
 } controls_motion;
-typedef enum { CONTROLS_TITLE, CONTROLS_PLAY, CONTROLS_PAUSE, CONTROLS_GAME_OVER } controls_screen;
+typedef enum {
+    CONTROLS_TITLE,
+    CONTROLS_PLAY,
+    CONTROLS_PAUSE,
+    CONTROLS_GAME_OVER,
+    CONTROLS_SETTINGS
+} controls_screen;
 typedef enum {
     CONTROLS_TARGET_NONE,
     CONTROLS_TARGET_START,
     CONTROLS_TARGET_MODE,
     CONTROLS_TARGET_QUIT,
     CONTROLS_TARGET_REBOOT,
-    CONTROLS_TARGET_PAUSE
+    CONTROLS_TARGET_PAUSE,
+    CONTROLS_TARGET_SETTINGS,
+    CONTROLS_TARGET_BACK,
+    CONTROLS_TARGET_FIRE_DOWN,
+    CONTROLS_TARGET_FIRE_UP,
+    CONTROLS_TARGET_ENEMY_DOWN,
+    CONTROLS_TARGET_ENEMY_UP,
+    CONTROLS_TARGET_TILT_DOWN,
+    CONTROLS_TARGET_TILT_UP
 } controls_target;
 typedef struct {
     uint32_t now_ms;
@@ -66,6 +112,7 @@ typedef struct {
     bool touch_invalid; /* Bus error, not a physical release. Zero means valid. */
     bool motion_valid;  /* True only for a newly acquired, complete IMU sample. */
     controls_motion motion;
+    uint16_t tilt_sensitivity_percent; /*0=100 default; other values clamp50..200. */
 } controls_sample;
 typedef struct {
     game_input input;

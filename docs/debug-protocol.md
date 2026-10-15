@@ -54,7 +54,7 @@ sending the next request, especially over USB.
 | `FRAME` | none | Returns indexed pixels and an RGB565 palette as described below. |
 
 `INPUT` keys: `turn` (-1, 0, 1), `angle_delta` (-32768..32767), and `fire`,
-`start`, `pause`, `quit` (0 or 1). Duplicate or unknown keys reject the entire
+`start`, `pause`, `quit` (0 or 1), plus `menu` (0..8). Duplicate or unknown keys reject the entire
 request. `turn` and `fire` persist until changed. The other fields are pulses,
 consumed on the next simulation tick. For example `INPUT start=1`, then `STEP 1`
 starts a run. Positive rotation is clockwise; angle 0 points up and 16384 right.
@@ -64,7 +64,10 @@ The shared adapter permits `SET` only for `score` / `high_score`
 (0..99999999), `lives` (0..99), `ship_angle` (0..65535), `invincible`,
 `autofire`, and `double_fire` (0 or 1), plus `control_mode` (0 hold, 1 border
 drag, 2 tilt). If the adapter has an attached controls state, selecting a mode
-updates both simulation UI and live controls. Stage changes use `LEVEL`; the entity
+updates both simulation UI and live controls. Tunable fields are `fire_rate`
+(1..10 volleys/s), `enemy_speed` (25..200 in 25% steps), and `tilt_sensitivity`
+(50..200 in 25% steps). These are also exposed by STATE, alongside the
+`pause_settings` page flag. Stage changes use `LEVEL`; the entity
 arrays and game phase cannot be overwritten. `STATE` reports tick, RNG state,
 score, high score, lives, stage, planet, warp, double fire, phase name, ship
 angle, invincibility, autofire, frozen status, control mode, tilt calibration readiness, reboot progress,
@@ -74,6 +77,15 @@ outside it.
 
 `STEP` counts update calls; starting a run or toggling the pause menu can consume
 a call without incrementing the reported game tick.
+
+Menu pulses are 0=none, 1=open Settings, 2=Back, 3/4=fire rate down/up,
+5/6=enemy speed down/up, 7/8=tilt sensitivity down/up. They are consumed after
+one update, even when STEP requests multiple updates. Open/Back only operate
+while the game is paused; adjustments additionally require the Settings page.
+For example, `INPUT pause=1`, `STEP 1`, `INPUT menu=1`, `STEP 1` opens Settings.
+`INPUT menu=4`, `STEP 1` increases fire rate by one without advancing gameplay.
+Settings survive quit/newgame. `RESET seed` restores defaults for repeatable
+scenarios; no settings are written to flash.
 
 `PAUSE`/`RESUME` control the external scheduler; the game's own pause menu is
 controlled with `INPUT pause=1`. `STEP` bypasses the scheduler freeze but still

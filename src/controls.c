@@ -25,12 +25,37 @@ controls_target controls_hit_test(controls_screen screen, uint16_t x, uint16_t y
         if (in_rect(x, y, CONTROLS_PAUSE_MODE_X0, CONTROLS_PAUSE_MODE_X1, CONTROLS_PAUSE_MODE_Y0,
                     CONTROLS_PAUSE_MODE_Y1))
             return CONTROLS_TARGET_MODE;
+        if (in_rect(x, y, CONTROLS_SETTINGS_X0, CONTROLS_SETTINGS_X1, CONTROLS_SETTINGS_Y0,
+                    CONTROLS_SETTINGS_Y1))
+            return CONTROLS_TARGET_SETTINGS;
         if (in_rect(x, y, CONTROLS_QUIT_X0, CONTROLS_QUIT_X1, CONTROLS_QUIT_Y0, CONTROLS_QUIT_Y1))
             return CONTROLS_TARGET_QUIT;
         if (in_rect(x, y, CONTROLS_REBOOT_X0, CONTROLS_REBOOT_X1, CONTROLS_REBOOT_Y0,
                     CONTROLS_REBOOT_Y1))
             return CONTROLS_TARGET_REBOOT;
-    } else if (radius_squared(x, y) <= CONTROLS_CENTER_RADIUS * CONTROLS_CENTER_RADIUS) {
+    } else if (screen == CONTROLS_SETTINGS) {
+        static const struct {
+            uint16_t x0, x1, y0, y1;
+            controls_target target;
+        } items[] = {{CONTROLS_FIRE_DOWN_X0, CONTROLS_FIRE_DOWN_X1, CONTROLS_FIRE_DOWN_Y0,
+                      CONTROLS_FIRE_DOWN_Y1, CONTROLS_TARGET_FIRE_DOWN},
+                     {CONTROLS_FIRE_UP_X0, CONTROLS_FIRE_UP_X1, CONTROLS_FIRE_UP_Y0,
+                      CONTROLS_FIRE_UP_Y1, CONTROLS_TARGET_FIRE_UP},
+                     {CONTROLS_ENEMY_DOWN_X0, CONTROLS_ENEMY_DOWN_X1, CONTROLS_ENEMY_DOWN_Y0,
+                      CONTROLS_ENEMY_DOWN_Y1, CONTROLS_TARGET_ENEMY_DOWN},
+                     {CONTROLS_ENEMY_UP_X0, CONTROLS_ENEMY_UP_X1, CONTROLS_ENEMY_UP_Y0,
+                      CONTROLS_ENEMY_UP_Y1, CONTROLS_TARGET_ENEMY_UP},
+                     {CONTROLS_TILT_DOWN_X0, CONTROLS_TILT_DOWN_X1, CONTROLS_TILT_DOWN_Y0,
+                      CONTROLS_TILT_DOWN_Y1, CONTROLS_TARGET_TILT_DOWN},
+                     {CONTROLS_TILT_UP_X0, CONTROLS_TILT_UP_X1, CONTROLS_TILT_UP_Y0,
+                      CONTROLS_TILT_UP_Y1, CONTROLS_TARGET_TILT_UP},
+                     {CONTROLS_BACK_X0, CONTROLS_BACK_X1, CONTROLS_BACK_Y0, CONTROLS_BACK_Y1,
+                      CONTROLS_TARGET_BACK}};
+        for (unsigned i = 0; i < sizeof items / sizeof items[0]; ++i)
+            if (in_rect(x, y, items[i].x0, items[i].x1, items[i].y0, items[i].y1))
+                return items[i].target;
+    } else if (screen == CONTROLS_PLAY &&
+               radius_squared(x, y) <= CONTROLS_CENTER_RADIUS * CONTROLS_CENTER_RADIUS) {
         return CONTROLS_TARGET_PAUSE;
     }
     return CONTROLS_TARGET_NONE;
@@ -220,6 +245,14 @@ static int16_t tilt_input(controls_state *state, const controls_sample *sample) 
     if (amount <= 546)
         return 0; /* Three degrees around calibrated neutral. */
     int32_t speed = (amount - 546) * 900 / (4551 - 546); /* Full rate near 25 degrees. */
+    uint32_t sensitivity = sample->tilt_sensitivity_percent;
+    if (sensitivity == 0u)
+        sensitivity = 100u;
+    else if (sensitivity < 50u)
+        sensitivity = 50u;
+    else if (sensitivity > 200u)
+        sensitivity = 200u;
+    speed = speed * (int32_t)sensitivity / 100;
     if (speed > 900)
         speed = 900;
     return (int16_t)(bank < 0 ? -speed : speed);
@@ -264,7 +297,7 @@ controls_output controls_update(controls_state *state, controls_sample sample,
         if (screen == CONTROLS_PLAY)
             out.input.fire = state->fire_stable;
         else if (fire_rise) {
-            if (screen == CONTROLS_PAUSE)
+            if (screen == CONTROLS_PAUSE || screen == CONTROLS_SETTINGS)
                 out.input.pause = true;
             else
                 out.input.start = true;
@@ -352,6 +385,30 @@ controls_output controls_update(controls_state *state, controls_sample sample,
                 break;
             case CONTROLS_TARGET_QUIT:
                 out.input.quit = true;
+                break;
+            case CONTROLS_TARGET_SETTINGS:
+                out.input.menu_action = GAME_MENU_SETTINGS;
+                break;
+            case CONTROLS_TARGET_BACK:
+                out.input.menu_action = GAME_MENU_BACK;
+                break;
+            case CONTROLS_TARGET_FIRE_DOWN:
+                out.input.menu_action = GAME_MENU_FIRE_DOWN;
+                break;
+            case CONTROLS_TARGET_FIRE_UP:
+                out.input.menu_action = GAME_MENU_FIRE_UP;
+                break;
+            case CONTROLS_TARGET_ENEMY_DOWN:
+                out.input.menu_action = GAME_MENU_ENEMY_DOWN;
+                break;
+            case CONTROLS_TARGET_ENEMY_UP:
+                out.input.menu_action = GAME_MENU_ENEMY_UP;
+                break;
+            case CONTROLS_TARGET_TILT_DOWN:
+                out.input.menu_action = GAME_MENU_TILT_DOWN;
+                break;
+            case CONTROLS_TARGET_TILT_UP:
+                out.input.menu_action = GAME_MENU_TILT_UP;
                 break;
             case CONTROLS_TARGET_MODE:
                 controls_set_mode(state, (controls_mode)(((unsigned)state->mode + 1u) %

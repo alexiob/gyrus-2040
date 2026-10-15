@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-15",
+  "board_serial": "E463985803302D34",
+  "uf2_sha256": "78e5f4e65bc0b7081a790b5202e830e42704451703ea42608b6b25b1ef1a8bfb",
+  "builds": [
+    "native Sokol/Metal",
+    "headless C11",
+    "RP2040 UF2"
+  ],
+  "ctest_suites_passed": 20,
+  "independent_sanitizer_review_suites_passed": 20,
+  "settings": {
+    "fire_rate": {
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 5,
+      "unit": "volleys/second"
+    },
+    "enemy_speed": {
+      "min": 25,
+      "max": 200,
+      "step": 25,
+      "default": 100,
+      "unit": "percent of preceding tuned pace"
+    },
+    "tilt_sensitivity": {
+      "min": 50,
+      "max": 200,
+      "step": 25,
+      "default": 100,
+      "unit": "percent gain"
+    }
+  },
+  "preserved_across_new_games": true,
+  "persistent_across_reboot": false,
+  "memory": {
+    "elf_text_bytes": 133036,
+    "elf_bss_bytes": 141556
+  },
+  "device_native_matches": 14,
+  "replay": [
+    {
+      "name": "title",
+      "stage": 1,
+      "hash": 1449740335,
+      "frame_crc32": 1951737846
+    },
+    {
+      "name": "intro",
+      "stage": 1,
+      "hash": 4002427679,
+      "frame_crc32": 1085144012
+    },
+    {
+      "name": "combat",
+      "stage": 1,
+      "hash": 3298733933,
+      "frame_crc32": 237407368
+    },
+    {
+      "name": "chance",
+      "stage": 3,
+      "hash": 3330217772,
+      "frame_crc32": 2394075010
+    },
+    {
+      "name": "lasers",
+      "stage": 6,
+      "hash": 1144159113,
+      "frame_crc32": 3492329601
+    },
+    {
+      "name": "earth",
+      "stage": 23,
+      "hash": 3522962765,
+      "frame_crc32": 3357350100
+    },
+    {
+      "name": "next-route",
+      "stage": 24,
+      "hash": 3870583491,
+      "frame_crc32": 2829532450
+    },
+    {
+      "name": "menu",
+      "stage": 24,
+      "hash": 3182746126,
+      "frame_crc32": 3512365481
+    },
+    {
+      "name": "settings-default",
+      "stage": 24,
+      "hash": 3169413127,
+      "frame_crc32": 4057697316
+    },
+    {
+      "name": "settings-adjusted",
+      "stage": 24,
+      "hash": 736410439,
+      "frame_crc32": 2206234499
+    },
+    {
+      "name": "settings-min",
+      "stage": 24,
+      "hash": 2179532047,
+      "frame_crc32": 1926249398
+    },
+    {
+      "name": "settings-max",
+      "stage": 24,
+      "hash": 1953335967,
+      "frame_crc32": 1731777436
+    },
+    {
+      "name": "settings-back",
+      "stage": 24,
+      "hash": 1453705094,
+      "frame_crc32": 3512365481
+    },
+    {
+      "name": "settings-resumed",
+      "stage": 25,
+      "hash": 3693360714,
+      "frame_crc32": 1433407806
+    }
+  ],
+  "hardware_snapshot": {
+    "accel_mg": [
+      -542,
+      171,
+      -760
+    ],
+    "bootsel_read_failures": 0,
+    "control_mode": 0,
+    "cpu_hz": 125000000,
+    "display_disabled": false,
+    "display_errors": 0,
+    "dropped_frames": 0,
+    "firmware": "gyrus_game",
+    "gyro_mdps": [
+      -11343,
+      5625,
+      -6203
+    ],
+    "imu_ok": true,
+    "imu_revision": 124,
+    "last_present_us": 14357,
+    "max_present_us": 17021,
+    "motion_age_ms": 15,
+    "peri_hz": 125000000,
+    "presented_frames": 478,
+    "render_max_us": 7714,
+    "render_us": 6518,
+    "rendered_frames": 479,
+    "sim_max_us": 1132,
+    "sim_overruns": 0,
+    "spi_hz": 62500000,
+    "touch_errors": 0,
+    "touch_irq": 121
+  },
+  "physical_touch_acceptance": "requested; awaiting user feedback"
+}

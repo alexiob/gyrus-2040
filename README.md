@@ -11,6 +11,9 @@ Select LEFT / RIGHT, BORDER DRAG, or TILT on the title/pause screen.
 Split touch is inverted: left turns clockwise, right counterclockwise. Tilt
 calibrates after holding still for half a second at start/resume. The pause menu
 has separate Quit and Reboot actions; Reboot needs a continuous five-second hold.
+Open **Pause → Settings** to adjust fire rate (1–10 volleys/s), enemy speed
+(25–200%), and tilt sensitivity (50–200%) with touch −/+ buttons. Values remain
+selected across new games until reboot; defaults are 5/s, 100%, 100%.
 Physical RESET always resets the chip immediately. BOOT can start/resume, and
 can fire when autofire is disabled for debugging.
 
@@ -78,7 +81,7 @@ python3 tools/gyrusctl.py --tcp 20400 PAUSE
 python3 tools/gyrusctl.py --tcp 20400 STEP 120
 ```
 
-For a repeatable device/native comparison, including eight screenshot captures:
+For a repeatable device/native comparison, including fourteen screenshot captures:
 
 ```sh
 .deps/venv/bin/python tools/smoke_game.py --serial /dev/cu.usbmodem2241301
@@ -109,6 +112,7 @@ The QMI8658A uses synchronized shadow-register reads for coherent 6-axis samples
 No TE wire is exposed; buffering cannot guarantee synchronized panel scanout.
 
 - [Game implementation and validation](docs/hardware/2026-10-15-game.md)
+- [On-device settings and verification](docs/hardware/2026-10-15-settings.md)
 - [Controls and IMU details](docs/controls.md)
 - [Gameplay/scoring](docs/gameplay.md)
 - [Original assets and deterministic generator](docs/assets.md)

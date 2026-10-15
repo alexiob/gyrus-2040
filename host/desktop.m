@@ -158,7 +158,7 @@ static controls_screen current_screen(void) {
     case GAME_TITLE:
         return CONTROLS_TITLE;
     case GAME_PAUSED:
-        return CONTROLS_PAUSE;
+        return app.game.pause_settings ? CONTROLS_SETTINGS : CONTROLS_PAUSE;
     case GAME_OVER:
         return CONTROLS_GAME_OVER;
     default:
@@ -201,6 +201,7 @@ static void simulate(void) {
     sample.motion.accel_mg[0] = (int32_t)lround(sin(radians) * 1000.0);
     sample.motion.accel_mg[2] = (int32_t)lround(cos(radians) * 1000.0);
     sample.motion.gyro_mdps[1] = -(app.bank_mdeg - previous_bank) * 60;
+    sample.tilt_sensitivity_percent = app.game.settings.tilt_sensitivity_percent;
     controls_output local = controls_update(&app.controls, sample, current_screen());
     if (local.reboot_requested) {
         game_init(&app.game, app.seed);
@@ -221,6 +222,8 @@ static void simulate(void) {
     input->start = input->start || local.input.start || app.start;
     input->pause = input->pause || local.input.pause || app.pause;
     input->quit = input->quit || local.input.quit || app.quit;
+    if (local.input.menu_action != GAME_MENU_NONE)
+        input->menu_action = local.input.menu_action;
     if (!app.adapter.frozen)
         gyrus_debug_game_tick(&app.adapter);
     /* Persistent injected controls remain until replaced; edge actions are pulses. */

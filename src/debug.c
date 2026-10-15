@@ -123,6 +123,11 @@ static bool parse_input(char **t, size_t count, gyrus_debug_input *out) {
             if (!signed_number(eq, -32768, 32767, &v))
                 return false;
             out->angle_delta = (int16_t)v;
+        } else if (!strcmp(t[i], "menu")) {
+            mask = GYRUS_INPUT_MENU;
+            if (!signed_number(eq, 0, 8, &v))
+                return false;
+            out->menu_action = (uint8_t)v;
         } else {
             if (!signed_number(eq, 0, 1, &v))
                 return false;

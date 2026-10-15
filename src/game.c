@@ -50,6 +50,7 @@ void game_init(game_state *g, uint32_t seed) {
     g->rng = seed ? seed : 0x20401983u;
     g->lives = 3;
     g->autofire = true;
+    g->settings = (game_settings){5, 100, 100};
     g->stage = 1;
     g->warp = 2;
     g->phase = GAME_TITLE;
@@ -83,6 +84,9 @@ bool game_set_stage(game_state *g, unsigned stage) {
     g->escaped = 0;
     g->stage_target = 40;
     g->fire_cooldown = 0;
+    g->fire_rate_remainder = 0;
+    g->enemy_time_remainder = 0;
+    g->enemy_ticks = 0;
     g->invulnerable = 90;
     clear_entities(g);
     return true;
@@ -90,13 +94,79 @@ bool game_set_stage(game_state *g, unsigned stage) {
 void game_start(game_state *g) {
     const uint32_t high = g->high_score, seed = g->rng;
     const uint8_t mode = g->control_mode;
+    const game_settings settings = g->settings;
     const bool invincible = g->invincible, autofire = g->autofire;
     game_init(g, seed);
     g->high_score = high;
     g->control_mode = mode;
+    g->settings = settings;
     g->invincible = invincible;
     g->autofire = autofire;
     (void)game_set_stage(g, 1);
+}
+bool game_set_setting(game_state *g, game_setting setting, int32_t value) {
+    if (!g)
+        return false;
+    switch (setting) {
+    case GAME_SETTING_FIRE_RATE:
+        if (value < 1 || value > 10)
+            return false;
+        if (g->settings.fire_rate != (uint8_t)value) {
+            g->settings.fire_rate = (uint8_t)value;
+            g->fire_cooldown = 0;
+            g->fire_rate_remainder = 0;
+        }
+        return true;
+    case GAME_SETTING_ENEMY_SPEED:
+        if (value < 25 || value > 200 || value % 25 != 0)
+            return false;
+        g->settings.enemy_speed_percent = (uint16_t)value;
+        return true;
+    case GAME_SETTING_TILT_SENSITIVITY:
+        if (value < 50 || value > 200 || value % 25 != 0)
+            return false;
+        g->settings.tilt_sensitivity_percent = (uint16_t)value;
+        return true;
+    }
+    return false;
+}
+static void pause_action(game_state *g, game_menu_action action) {
+    if (action == GAME_MENU_SETTINGS) {
+        g->pause_settings = true;
+        return;
+    }
+    if (action == GAME_MENU_BACK) {
+        g->pause_settings = false;
+        return;
+    }
+    if (!g->pause_settings)
+        return;
+    switch (action) {
+    case GAME_MENU_FIRE_DOWN:
+        (void)game_set_setting(g, GAME_SETTING_FIRE_RATE, (int32_t)g->settings.fire_rate - 1);
+        break;
+    case GAME_MENU_FIRE_UP:
+        (void)game_set_setting(g, GAME_SETTING_FIRE_RATE, (int32_t)g->settings.fire_rate + 1);
+        break;
+    case GAME_MENU_ENEMY_DOWN:
+        (void)game_set_setting(g, GAME_SETTING_ENEMY_SPEED,
+                               (int32_t)g->settings.enemy_speed_percent - 25);
+        break;
+    case GAME_MENU_ENEMY_UP:
+        (void)game_set_setting(g, GAME_SETTING_ENEMY_SPEED,
+                               (int32_t)g->settings.enemy_speed_percent + 25);
+        break;
+    case GAME_MENU_TILT_DOWN:
+        (void)game_set_setting(g, GAME_SETTING_TILT_SENSITIVITY,
+                               (int32_t)g->settings.tilt_sensitivity_percent - 25);
+        break;
+    case GAME_MENU_TILT_UP:
+        (void)game_set_setting(g, GAME_SETTING_TILT_SENSITIVITY,
+                               (int32_t)g->settings.tilt_sensitivity_percent + 25);
+        break;
+    default:
+        break;
+    }
 }
 static void score_add(game_state *g, uint32_t amount) {
     const uint32_t before = g->score < 30000u ? 0u : 1u + (g->score - 30000u) / 60000u;
@@ -266,7 +336,7 @@ static void update_enemies(game_state *g) {
         }
     }
 }
-static void update_shots(game_state *g) {
+static void update_player_shots(game_state *g) {
     for (unsigned i = 0; i < GAME_SHOTS; ++i) {
         game_shot *s = &g->shots[i];
         if (!s->active)
@@ -276,6 +346,8 @@ static void update_shots(game_state *g) {
         if (s->radius < 4 * 256)
             s->active = 0;
     }
+}
+static void update_hostile_shots(game_state *g) {
     for (unsigned i = 0; i < GAME_HOSTILE_SHOTS; ++i) {
         game_shot *s = &g->hostile[i];
         if (!s->active)
@@ -284,10 +356,6 @@ static void update_shots(game_state *g) {
         ++s->age;
         if (s->radius > 130 * 256)
             s->active = 0;
-        else if (near_polar(s->angle, s->radius, g->ship_angle, 104 * 256, 6)) {
-            s->active = 0;
-            die(g);
-        }
     }
 }
 static bool beam_hits(game_state *g, const game_enemy *a, const game_enemy *b) {
@@ -304,6 +372,14 @@ static bool beam_hits(game_state *g, const game_enemy *a, const game_enemy *b) {
     return cross * cross <= (int64_t)25 * denom;
 }
 static void collisions(game_state *g) {
+    /* The player moves every tick, including ticks without enemy movement. */
+    for (unsigned i = 0; i < GAME_HOSTILE_SHOTS; ++i) {
+        game_shot *shot = &g->hostile[i];
+        if (shot->active && near_polar(shot->angle, shot->radius, g->ship_angle, 104 * 256, 6)) {
+            shot->active = 0;
+            die(g);
+        }
+    }
     for (unsigned i = 0; i < GAME_SHOTS; ++i) {
         game_shot *s = &g->shots[i];
         if (!s->active)
@@ -341,7 +417,7 @@ static void collisions(game_state *g) {
 static void spawns(game_state *g) {
     const bool chance = g->phase == GAME_CHANCE;
     const unsigned gap = chance ? 8u : 12u;
-    if (g->spawned < g->stage_target && g->phase_ticks % gap == 0u) {
+    if (g->spawned < g->stage_target && g->enemy_ticks % gap == 0u) {
         const unsigned wave = g->spawned / 10u;
         uint16_t angle = (uint16_t)(wave * 16384u + (g->spawned % 10u) * 1300u + g->planet * 1800u);
         if (wave & 1u)
@@ -352,15 +428,15 @@ static void spawns(game_state *g) {
     }
     if (chance)
         return;
-    if (g->phase_ticks == 260u) {
+    if (g->enemy_ticks == 260u) {
         (void)spawn_enemy(g, 6, add_angle(g->ship_angle, -3000), 68 * 256, 1);
         (void)spawn_enemy(g, 3, g->ship_angle, 68 * 256, 1);
         (void)spawn_enemy(g, 6, add_angle(g->ship_angle, 3000), 68 * 256, 1);
     }
-    if (g->stage >= 2u && g->phase_ticks % 240u == 120u)
+    if (g->stage >= 2u && g->enemy_ticks % 240u == 120u)
         (void)spawn_enemy(g, 4, add_angle(g->ship_angle, (int32_t)(random_word(g) % 4001u) - 2000),
                           0, 2);
-    if (g->stage >= 6u && g->phase_ticks % 480u == 300u) {
+    if (g->stage >= 6u && g->enemy_ticks % 480u == 300u) {
         (void)spawn_enemy(g, 5, add_angle(g->ship_angle, -5500), 0, 2);
         (void)spawn_enemy(g, 5, add_angle(g->ship_angle, 5500), 0, 2);
     }
@@ -373,6 +449,7 @@ void game_step(game_state *g, const game_input *input) {
     const game_input *in = input ? input : &zero;
     if (in->quit) {
         g->phase = GAME_TITLE;
+        g->pause_settings = false;
         g->phase_ticks = 0;
         clear_entities(g);
         return;
@@ -382,6 +459,7 @@ void game_step(game_state *g, const game_input *input) {
         return;
     }
     if (in->pause && g->phase != GAME_TITLE && g->phase != GAME_OVER) {
+        g->pause_settings = false;
         if (g->phase == GAME_PAUSED)
             g->phase = g->resume_phase;
         else {
@@ -390,8 +468,10 @@ void game_step(game_state *g, const game_input *input) {
         }
         return;
     }
-    if (g->phase == GAME_PAUSED)
+    if (g->phase == GAME_PAUSED) {
+        pause_action(g, in->menu_action);
         return;
+    }
     ++g->tick;
     ++g->phase_ticks;
     update_stars_particles(g);
@@ -419,12 +499,34 @@ void game_step(game_state *g, const game_input *input) {
                   100 * 256);
         if (g->double_fire)
             fire_shot(g->shots, GAME_SHOTS, add_angle(g->ship_angle, 550), 100 * 256);
-        g->fire_cooldown = 12; /* Five shots/second at60Hz; double fire stays paired. */
+        const unsigned rate = g->settings.fire_rate;
+        g->fire_cooldown = (uint16_t)(GAME_TICK_HZ / rate);
+        g->fire_rate_remainder = (uint8_t)(g->fire_rate_remainder + GAME_TICK_HZ % rate);
+        if (g->fire_rate_remainder >= rate) {
+            ++g->fire_cooldown;
+            g->fire_rate_remainder = (uint8_t)(g->fire_rate_remainder - rate);
+        }
     }
-    spawns(g);
-    update_enemies(g);
-    update_shots(g);
-    collisions(g);
+    /* A separate fractional clock keeps formations, lifetimes, hazards and
+     * hostile fire coherent at25..200%, while the player stays at60Hz. */
+    unsigned enemy_time = (unsigned)g->enemy_time_remainder + g->settings.enemy_speed_percent;
+    unsigned enemy_steps = enemy_time / 100u;
+    g->enemy_time_remainder = (uint8_t)(enemy_time % 100u);
+    if (enemy_steps == 0u) {
+        update_player_shots(g);
+        collisions(g);
+    } else
+        for (unsigned step = 0; step < enemy_steps; ++step) {
+            ++g->enemy_ticks;
+            spawns(g);
+            update_enemies(g);
+            if (step == 0u)
+                update_player_shots(g);
+            update_hostile_shots(g);
+            collisions(g);
+            if (g->phase == GAME_OVER)
+                break;
+        }
     if (g->phase == GAME_OVER)
         return;
     bool any = false;
@@ -476,6 +578,13 @@ uint32_t game_state_hash(const game_state *g) {
     H(g->resume_phase);
     H(g->invincible);
     H(g->autofire);
+    H(g->pause_settings);
+    H(g->settings.fire_rate);
+    H(g->settings.enemy_speed_percent);
+    H(g->settings.tilt_sensitivity_percent);
+    H(g->fire_rate_remainder);
+    H(g->enemy_time_remainder);
+    H(g->enemy_ticks);
     for (unsigned i = 0; i < GAME_ENEMIES; ++i) {
         const game_enemy *e = &g->enemies[i];
         H(e->radius);

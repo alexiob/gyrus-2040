@@ -65,8 +65,67 @@ static void player_stays_visible(void) {
             }
     }
 }
+static void settings_pages(void) {
+    static const unsigned rectangles[][4] = {
+        {CONTROLS_FIRE_DOWN_X0, CONTROLS_FIRE_DOWN_Y0, CONTROLS_FIRE_DOWN_X1,
+         CONTROLS_FIRE_DOWN_Y1},
+        {CONTROLS_FIRE_UP_X0, CONTROLS_FIRE_UP_Y0, CONTROLS_FIRE_UP_X1, CONTROLS_FIRE_UP_Y1},
+        {CONTROLS_ENEMY_DOWN_X0, CONTROLS_ENEMY_DOWN_Y0, CONTROLS_ENEMY_DOWN_X1,
+         CONTROLS_ENEMY_DOWN_Y1},
+        {CONTROLS_ENEMY_UP_X0, CONTROLS_ENEMY_UP_Y0, CONTROLS_ENEMY_UP_X1, CONTROLS_ENEMY_UP_Y1},
+        {CONTROLS_TILT_DOWN_X0, CONTROLS_TILT_DOWN_Y0, CONTROLS_TILT_DOWN_X1,
+         CONTROLS_TILT_DOWN_Y1},
+        {CONTROLS_TILT_UP_X0, CONTROLS_TILT_UP_Y0, CONTROLS_TILT_UP_X1, CONTROLS_TILT_UP_Y1},
+        {CONTROLS_BACK_X0, CONTROLS_BACK_Y0, CONTROLS_BACK_X1, CONTROLS_BACK_Y1},
+    };
+    static uint8_t pixels[GAME_WIDTH * GAME_HEIGHT];
+    game_state g;
+    game_init(&g, 2040);
+    g.phase = GAME_PAUSED;
+    g.pause_settings = true;
+    for (unsigned rate = 1; rate <= 10u; ++rate) {
+        g.settings.fire_rate = (uint8_t)rate;
+        g.settings.enemy_speed_percent = 100;
+        g.settings.tilt_sensitivity_percent = 100;
+        check_frame(&g);
+    }
+    for (unsigned speed = 25; speed <= 200u; speed += 25u) {
+        g.settings.enemy_speed_percent = (uint16_t)speed;
+        check_frame(&g);
+    }
+    for (unsigned sensitivity = 50; sensitivity <= 200u; sensitivity += 25u) {
+        g.settings.tilt_sensitivity_percent = (uint16_t)sensitivity;
+        check_frame(&g);
+    }
+    game_render(&g, pixels);
+    /* Every edge of each visible control agrees with its complete touch rectangle,
+       including all four corners, without being lost to the circular aperture. */
+    for (unsigned i = 0; i < sizeof rectangles / sizeof rectangles[0]; ++i) {
+        const unsigned *r = rectangles[i];
+        for (unsigned x = r[0]; x < r[2]; ++x) {
+            assert(pixels[r[1] * GAME_WIDTH + x] != 0u);
+            assert(pixels[(r[3] - 1u) * GAME_WIDTH + x] != 0u);
+        }
+        for (unsigned y = r[1]; y < r[3]; ++y) {
+            assert(pixels[y * GAME_WIDTH + r[0]] != 0u);
+            assert(pixels[y * GAME_WIDTH + r[2] - 1u] != 0u);
+        }
+    }
+    g.settings = (game_settings){1, 25, 50};
+    game_render(&g, pixels);
+    assert(pixels[CONTROLS_FIRE_DOWN_Y0 * GAME_WIDTH + CONTROLS_FIRE_DOWN_X0] == GYRUS_COLOR_STEEL);
+    assert(pixels[CONTROLS_ENEMY_DOWN_Y0 * GAME_WIDTH + CONTROLS_ENEMY_DOWN_X0] ==
+           GYRUS_COLOR_STEEL);
+    assert(pixels[CONTROLS_TILT_DOWN_Y0 * GAME_WIDTH + CONTROLS_TILT_DOWN_X0] == GYRUS_COLOR_STEEL);
+    g.settings = (game_settings){10, 200, 200};
+    game_render(&g, pixels);
+    assert(pixels[CONTROLS_FIRE_UP_Y0 * GAME_WIDTH + CONTROLS_FIRE_UP_X0] == GYRUS_COLOR_STEEL);
+    assert(pixels[CONTROLS_ENEMY_UP_Y0 * GAME_WIDTH + CONTROLS_ENEMY_UP_X0] == GYRUS_COLOR_STEEL);
+    assert(pixels[CONTROLS_TILT_UP_Y0 * GAME_WIDTH + CONTROLS_TILT_UP_X0] == GYRUS_COLOR_STEEL);
+}
 int main(void) {
     player_stays_visible();
+    settings_pages();
     for (uint32_t seed = 1; seed <= 32u; ++seed) {
         game_state base;
         game_init(&base, seed);

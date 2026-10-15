@@ -21,10 +21,32 @@ typedef enum {
     GAME_PAUSED,
     GAME_OVER
 } game_phase;
+typedef enum {
+    GAME_MENU_NONE,
+    GAME_MENU_SETTINGS,
+    GAME_MENU_BACK,
+    GAME_MENU_FIRE_DOWN,
+    GAME_MENU_FIRE_UP,
+    GAME_MENU_ENEMY_DOWN,
+    GAME_MENU_ENEMY_UP,
+    GAME_MENU_TILT_DOWN,
+    GAME_MENU_TILT_UP
+} game_menu_action;
+typedef enum {
+    GAME_SETTING_FIRE_RATE,
+    GAME_SETTING_ENEMY_SPEED,
+    GAME_SETTING_TILT_SENSITIVITY
+} game_setting;
+typedef struct {
+    uint8_t fire_rate;                 /* Volleys/second,1..10. Default5. */
+    uint16_t enemy_speed_percent;      /*25..200 in25% steps;100=the current tuned speed. */
+    uint16_t tilt_sensitivity_percent; /*50..200 in25% steps;100=the current gain. */
+} game_settings;
 typedef struct {
     int8_t turn;
     int16_t angle_delta;
     bool fire, start, pause, quit;
+    game_menu_action menu_action;
 } game_input;
 typedef struct {
     int32_t radius;
@@ -56,7 +78,11 @@ typedef struct game_state {
     uint16_t reboot_progress;
     game_phase phase, resume_phase;
     bool invincible, autofire;
-    bool tilt_ready; /* UI only; excluded from simulation hash. */
+    game_settings settings;
+    uint8_t fire_rate_remainder, enemy_time_remainder;
+    uint16_t enemy_ticks;
+    bool pause_settings; /* Settings page; gates menu actions. */
+    bool tilt_ready;     /* UI only; excluded from simulation hash. */
     game_enemy enemies[GAME_ENEMIES];
     game_shot shots[GAME_SHOTS], hostile[GAME_HOSTILE_SHOTS];
     game_particle particles[GAME_PARTICLES];
@@ -64,6 +90,7 @@ typedef struct game_state {
 } game_state;
 void game_init(game_state *state, uint32_t seed);
 void game_start(game_state *state);
+bool game_set_setting(game_state *state, game_setting setting, int32_t value);
 void game_step(game_state *state, const game_input *input);
 bool game_set_stage(game_state *state, unsigned stage);
 /* Canonical deterministic state hash, excludes padding. */

@@ -69,6 +69,12 @@ int main(void) {
     request(&d, &f, "G1 10 INPUT turn=-1 angle_delta=123 fire=1\n");
     assert(f.input.turn == -1 && f.input.fire && f.input.angle_delta == 123);
     assert(f.input.mask == (GYRUS_INPUT_TURN | GYRUS_INPUT_ANGLE | GYRUS_INPUT_FIRE));
+    request(&d, &f, "G1 11 INPUT menu=8\n");
+    assert(f.input.mask == GYRUS_INPUT_MENU && f.input.menu_action == 8);
+    request(&d, &f, "G1 11 INPUT menu=9\n");
+    assert(strstr((char *)f.out, "\"ok\":false"));
+    request(&d, &f, "G1 11 INPUT menu=-1\n");
+    assert(strstr((char *)f.out, "\"ok\":false"));
     request(&d, &f, "G1 11 INPUT turn=2\n");
     assert(strstr((char *)f.out, "\"ok\":false"));
     request(&d, &f, "G1 11 INPUT fire=1 fire=0\n");

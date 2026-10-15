@@ -25,17 +25,25 @@ static bool state(void *ctx, char *out, size_t cap) {
         "\"ship_angle\":%u,"
         "\"invincible\":%s,\"autofire\":%s,\"frozen\":%s,\"control_mode\":%u,\"reboot_progress\":%"
         "u,\"tilt_ready\":%s,\"enemies\":%u,\"shots\":%u,\"hostile_shots\":%u,\"hash\":%" PRIu32
-        "}",
+        ",\"pause_settings\":%s,\"fire_rate\":%u,\"enemy_speed\":%u,\"tilt_sensitivity\":%u}",
         s->tick, s->rng, s->score, s->high_score, (unsigned)s->lives, (unsigned)s->stage,
         (unsigned)s->planet, (unsigned)s->warp, (unsigned)s->double_fire, game_phase_name(s->phase),
         (unsigned)s->ship_angle, s->invincible ? "true" : "false", s->autofire ? "true" : "false",
         a->frozen ? "true" : "false", (unsigned)s->control_mode, (unsigned)s->reboot_progress,
-        s->tilt_ready ? "true" : "false", enemies, shots, hostile, game_state_hash(s));
+        s->tilt_ready ? "true" : "false", enemies, shots, hostile, game_state_hash(s),
+        s->pause_settings ? "true" : "false", (unsigned)s->settings.fire_rate,
+        (unsigned)s->settings.enemy_speed_percent, (unsigned)s->settings.tilt_sensitivity_percent);
     return n > 0 && (size_t)n < cap;
 }
 static bool set(void *ctx, const char *key, int32_t n) {
     gyrus_debug_game *a = ctx;
     game_state *s = a->game;
+    if (!strcmp(key, "fire_rate"))
+        return game_set_setting(s, GAME_SETTING_FIRE_RATE, n);
+    if (!strcmp(key, "enemy_speed"))
+        return game_set_setting(s, GAME_SETTING_ENEMY_SPEED, n);
+    if (!strcmp(key, "tilt_sensitivity"))
+        return game_set_setting(s, GAME_SETTING_TILT_SENSITIVITY, n);
     if (!strcmp(key, "score") && n >= 0 && n <= 99999999)
         s->score = (uint32_t)n;
     else if (!strcmp(key, "high_score") && n >= 0 && n <= 99999999)
@@ -64,6 +72,7 @@ void gyrus_debug_game_tick(gyrus_debug_game *a) {
     a->input.start = false;
     a->input.pause = false;
     a->input.quit = false;
+    a->input.menu_action = GAME_MENU_NONE;
 }
 static bool action(void *ctx, gyrus_debug_action action, uint32_t n) {
     gyrus_debug_game *a = ctx;
@@ -89,6 +98,9 @@ static bool action(void *ctx, gyrus_debug_action action, uint32_t n) {
 }
 static bool input(void *ctx, const gyrus_debug_input *i) {
     game_input *out = &((gyrus_debug_game *)ctx)->input;
+    _Static_assert(GAME_MENU_TILT_UP == 8, "G1 menu codes must match game menu actions");
+    if (i->mask & GYRUS_INPUT_MENU)
+        out->menu_action = (game_menu_action)i->menu_action;
     if (i->mask & GYRUS_INPUT_TURN)
         out->turn = i->turn;
     if (i->mask & GYRUS_INPUT_ANGLE)

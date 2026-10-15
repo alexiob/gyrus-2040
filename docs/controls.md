@@ -10,16 +10,18 @@ The initial mode is **LEFT / RIGHT** (`CONTROLS_SPLIT_HOLD`). Split touch steeri
 
 **TILT** (`CONTROLS_TILT`) uses the onboard accelerometer and gyroscope. Select TILT on the title or pause screen, start/resume, and hold the board in a comfortable neutral pose for half a second. Steering is disabled while calibration is pending. `controls_tilt_ready()` and `controls_tilt_progress()` provide the indicator state. Calibration restarts on mode entry, game entry/resume, a stale sensor, or an explicit `controls_tilt_reset()`. The calibrated neutral pose can be inclined; it does not have to be flat.
 
-Banking toward sensor +X produces clockwise orbit speed; banking toward -X produces counterclockwise speed. The input is proportional to bank angle, with a three-degree neutral deadzone and full speed near 25 degrees. Speed is capped at 900 angle units per tick. The gravity angle from acceleration X/Z and the negative body-Y gyroscope rate feed an integer complementary filter; a second low-pass filter smooths the resulting bank. Initial gyro bias is learned during calibration. Pose changes above two degrees, gyro magnitude above 15 degrees/second (allowing the datasheet's initial zero-rate offset), shocks/freefall, or a degenerate gravity projection postpone calibration. Samples older than 100 milliseconds stop steering and require fresh calibration. BOOT remains the fire button and center touch still pauses in tilt mode. Sensor-axis polarity must be checked on the physical board in its intended screen orientation; the desktop simulation uses the same documented convention.
+Banking toward sensor +X produces clockwise orbit speed; banking toward -X produces counterclockwise speed. The input is proportional to bank angle, with a three-degree neutral deadzone and full speed near 25 degrees. Tilt sensitivity is adjustable from 50% to 200% in 25% steps, with 100% preserving the original response. The gain scales steering after the unchanged three-degree deadzone and before the 900-angle-unit-per-tick safety cap. `controls_sample.tilt_sensitivity_percent` supplies the current value; zero retains the 100% default for existing callers, and other values are clamped to 50..200. The gravity angle from acceleration X/Z and the negative body-Y gyroscope rate feed an integer complementary filter; a second low-pass filter smooths the resulting bank. Initial gyro bias is learned during calibration. Pose changes above two degrees, gyro magnitude above 15 degrees/second (allowing the datasheet's initial zero-rate offset), shocks/freefall, or a degenerate gravity projection postpone calibration. Samples older than 100 milliseconds stop steering and require fresh calibration. BOOT remains the fire button and center touch still pauses in tilt mode. Sensor-axis polarity must be checked on the physical board in its intended screen orientation; the desktop simulation uses the same documented convention.
 
 **Autofire is enabled by default**, so playing requires no button hold.
-BOOT also fires if autofire is disabled through the debug setting. Both edges are debounced for 25 milliseconds. At the title or game-over screen, one BOOT press starts a game; in the pause menu it resumes. A held BOOT or touch is consumed when the screen context changes, so a press used to start/resume does not also fire or accidentally activate a menu item. Release and press again to fire.
+BOOT also fires if autofire is disabled through the debug setting. Both edges are debounced for 25 milliseconds. At the title or game-over screen, one BOOT press starts a game; in the pause menu or Settings page it resumes. A held BOOT or touch is consumed when the screen context changes, so a press used to start/resume does not also fire or accidentally activate a menu item. Release and press again to fire.
 
 ## Menus
 
 Tap actions complete on release after at most 650 milliseconds. Moving more than 12 pixels from the original contact, leaving the original action, or a touch read error cancels a pending menu action until a **valid physical release** is confirmed. A synthetic released value from a failed I2C read cannot clear that interlock. Continued contact after an error cannot re-arm Quit or the Reboot hold. Starting a gameplay drag outside the pause circle does not activate pause when the drag passes through the center.
 
-The title and game-over screen have START and a mode toggle. The pause menu has RESUME, a mode toggle, QUIT, and **REBOOT: HOLD 5S**. Quit returns to the title through `game_input.quit`. Reboot requires a continuous, stationary five-second hold; a brief tap does nothing. Reboot is a one-shot `reboot_requested` event for the firmware to handle. `controls_reboot_progress()` exposes 0 to 1000 for visible hold feedback.
+The title and game-over screen have START and a mode toggle. The pause menu has RESUME, a mode toggle, SETTINGS, QUIT, and **REBOOT: HOLD 5S**. Quit returns to the title through `game_input.quit`. Reboot requires a continuous, stationary five-second hold; a brief tap does nothing. Reboot is a one-shot `reboot_requested` event for the firmware to handle. `controls_reboot_progress()` exposes 0 to 1000 for visible hold feedback.
+
+Settings provides minus and plus buttons for Fire Rate (1..10, default5), Enemy Speed (25%..200% in25% steps, default100%), and Tilt Sensitivity (50%..200% in25% steps, default100%). BACK returns to the pause menu. Controls emits one `game_input.menu_action` on a valid short release; the game owns changing and bounding each value. Holding a button does not repeat changes. Leaving the button, moving more than12 pixels, a touch bus error, or entering a different menu while already touching cancels that contact. BOOT resumes from Settings rather than starting a new game.
 
 The exact half-open hit rectangles are in `include/gyrus/controls.h` and must also be used by the renderer:
 
@@ -27,10 +29,18 @@ The exact half-open hit rectangles are in `include/gyrus/controls.h` and must al
 | --- | --- | --- | --- |
 | Title / game over | Start | 60..179 | 92..135 |
 | Title / game over | Mode | 48..191 | 145..176 |
-| Pause | Resume | 60..179 | 80..103 |
-| Pause | Mode | 48..191 | 115..136 |
-| Pause | Quit | 60..179 | 145..168 |
-| Pause | Reboot: hold 5s | 68..171 | 181..204 |
+| Pause | Resume | 60..179 | 68..91 |
+| Pause | Mode | 48..191 | 98..121 |
+| Pause | Settings | 60..179 | 128..151 |
+| Pause | Quit | 60..179 | 158..181 |
+| Pause | Reboot: hold5s | 68..171 | 188..211 |
+| Settings | Fire minus | 42..79 | 78..105 |
+| Settings | Fire plus | 160..197 | 78..105 |
+| Settings | Enemy minus | 42..79 | 124..151 |
+| Settings | Enemy plus | 160..197 | 124..151 |
+| Settings | Tilt minus | 42..79 | 170..197 |
+| Settings | Tilt plus | 160..197 | 170..197 |
+| Settings | Back | 78..161 | 205..228 |
 
 ## Hardware findings and safe BOOT sampling
 
@@ -67,6 +77,6 @@ A **horizontal relative swipe** can map finger travel to orbit distance without 
 
 ## Verification
 
-`tests/test_controls.c` exercises hold/release; menu actions; sensor-error quarantine; BOOT debounce and context changes; quit; one-shot five-second reboot; clock rollover; clockwise/counterclockwise drag; angular wrap/deadzone/discontinuities; all three mode choices; tilt calibration, stationary bias, gyro prediction and gravity correction, proportional steering, saturation, angular wrap, and stale-sensor stop. `tests/test_sensors.c` uses isolated fake I2C/registers to exercise the actual driver initialization/readback, correct full-scale settings, little-endian signed scaling, fresh-data gating, timeout clearing, fallback address, configuration-command timeouts, ODR updates while locked, and stale-lock cleanup after a burst failure. These tests pass with strict warnings and address/undefined-behavior sanitizers.
+`tests/test_controls.c` exercises hold/release; pause/Settings navigation and adjustments; half-open menu hit boundaries; held-button suppression; sensor-error quarantine; BOOT debounce and context changes; quit; one-shot five-second reboot; clock rollover; clockwise/counterclockwise drag; angular wrap/deadzone/discontinuities; all three mode choices; tilt calibration, stationary bias, gyro prediction and gravity correction, proportional steering, saturation, angular wrap, stale-sensor stop; and tilt sensitivity default, gain limits, deadzone, and saturation. `tests/test_sensors.c` uses isolated fake I2C/registers to exercise the actual driver initialization/readback, correct full-scale settings, little-endian signed scaling, fresh-data gating, timeout clearing, fallback address, configuration-command timeouts, ODR updates while locked, and stale-lock cleanup after a burst failure. These tests pass with strict warnings and address/undefined-behavior sanitizers.
 
 The BOOT sampler was separately compiled with ARM compiler flags. Object disassembly places `sample_bootsel` and both register literals in `.time_critical.sample_bootsel`; the callback contains no calls into flash. Final linked placement and physical orientation/button/timing acceptance belong to firmware integration.

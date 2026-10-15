@@ -65,6 +65,7 @@ static bool send_frame(void) {
 }
 
 static void show_pattern(unsigned pattern) {
+    if (display_faulted()) {puts("{\"event\":\"error\",\"message\":\"display fault requires reboot\"}");return;}
     current_pattern=pattern;
     prepare_pattern(pattern);
     const bool ok=send_frame();
@@ -72,6 +73,7 @@ static void show_pattern(unsigned pattern) {
 }
 
 static void benchmark(void) {
+    if (display_faulted()) {puts("{\"event\":\"error\",\"message\":\"display fault requires reboot\"}");return;}
     const uint32_t requests[]={20000000u,40000000u,62500000u};
     prepare_pattern(1);
     for (unsigned r=0;r<3u;++r) {
@@ -134,31 +136,27 @@ int main(void) {
     const bool lcd_ok=display_init();
     info=sensors_init();
     if (lcd_ok) {prepare_pattern(0);(void)send_frame();}
-    char line[64];size_t used=0;bool discard=false,was_connected=false;
+    diag_line line={0};bool was_connected=false;
     uint64_t next_report=0,next_cursor=0;
     for (;;) {
         const bool connected=stdio_usb_connected();
         if (connected && !was_connected) {
             print_info();printf("{\"event\":\"ready\",\"lcd_ok\":%s}\n",lcd_ok?"true":"false");
-            used=0;discard=false;
+            line=(diag_line){0};
         }
         was_connected=connected;
         int ch=getchar_timeout_us(0);
         while (ch!=PICO_ERROR_TIMEOUT) {
-            if (ch=='\n' || ch=='\r') {
-                if (discard) puts("{\"event\":\"error\",\"message\":\"command too long\"}");
-                else if (used>0u) {line[used]='\0';dispatch(line);}
-                used=0;discard=false;
-            } else if (!discard) {
-                if (used+1u<sizeof line) line[used++]=(char)ch;
-                else discard=true;
-            }
+            const diag_line_result result=diag_line_feed(&line,(uint8_t)ch);
+            if (result==DIAG_LINE_READY) dispatch(line.text);
+            else if (result==DIAG_LINE_LONG) puts("{\"event\":\"error\",\"message\":\"command too long\"}");
+            else if (result==DIAG_LINE_INVALID) puts("{\"event\":\"error\",\"message\":\"invalid command bytes\"}");
             ch=getchar_timeout_us(0);
         }
         service_touch();
         const uint64_t now=time_us_64();
         if (streaming_touch && connected && now>=next_report) {print_touch();next_report=now+100000u;}
-        if (lcd_ok && touch_valid && touch.pressed && now>=next_cursor) {
+        if (lcd_ok && !display_faulted() && touch_valid && touch.pressed && now>=next_cursor) {
             prepare_pattern(2);
             const int tx=touch.x,ty=touch.y;
             for (int dy=-5;dy<=5;++dy) for (int dx=-5;dx<=5;++dx) {

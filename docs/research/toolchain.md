@@ -1,7 +1,8 @@
 # Toolchain audit and portable C choices
 
-Audited locally on 15 October 2026. This is a setup proposal; dependencies are
-not installed or integrated into a product build yet.
+Original audit: 15 October 2026. The proposal below is retained as research
+history. The native toolchain has since been installed locally, and the
+diagnostic was built and flashed; see [current bring-up results](../hardware/2026-10-15-bringup.md).
 
 ## What runs on this Mac
 

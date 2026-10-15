@@ -1,6 +1,6 @@
 # RP2040 Board Diagnostics Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build, flash and measure a native C diagnostic on the connected Waveshare RP2040-Touch-LCD-1.28.
 
@@ -32,28 +32,28 @@
 
 Files: CMakeLists.txt, CMakePresets.json, include/gyrus/diagnostic.h, src/diagnostic.c, tests/test_diagnostic.c, tools/setup.sh, dependencies.lock.json.
 Interfaces: `diag_window_encode(x,y,w,h,out[8])`; `diag_touch_decode(bytes[5],sample*)`; `diag_pattern_pixel(pattern,x,y)` returns RGB565.
-- [ ] Write tests asserting rejected empty/out-of-range windows, (239,239,1,1) -> endpoints 239, RGB565 bars, finger release and invalid coordinates.
-- [ ] Run host test; observe missing/unsupported behavior fail.
-- [ ] Implement portable model and CMake host/firmware selection; obtain pinned SDK/toolchain locally without modifying existing global compiler.
-- [ ] Run CTest with sanitizers; compiler must execute and produce Cortex-M0+ objects; commit.
+- [x] Write tests asserting rejected empty/out-of-range windows, (239,239,1,1) -> endpoints 239, RGB565 bars, finger release and invalid coordinates.
+- [x] Run host test; observe missing/unsupported behavior fail.
+- [x] Implement portable model and CMake host/firmware selection; obtain pinned SDK/toolchain locally without modifying existing global compiler.
+- [x] Run CTest with sanitizers; compiler must execute and produce Cortex-M0+ objects; commit.
 
 ### Task 2: Native board firmware and serial diagnostics
 
 Files: firmware/board.h, firmware/display.h, firmware/display.c, firmware/sensors.h, firmware/sensors.c, firmware/main.c, firmware/lcd_init.inc, THIRD_PARTY.md.
 Interfaces: display init, submit constant/frame pixels by polling/DMA, completion polling with timeout, baud selection; checked sensor probe/read; bounded line protocol.
-- [ ] Establish pre-flash USB/BOOTSEL identity and preserve readable flash to ignored local backup.
-- [ ] Use Task 1 tested window/touch functions in real driver. Retain attributable vendor LCD initialization table, implement control/stream logic separately.
-- [ ] Add RGB bars, checkerboard, touch cursor, status and commands info/pattern/bench/touch/boot. Benchmark polling and DMA separately; include actual clocks, payload, samples and min/mean/max.
-- [ ] Build ELF/UF2/map, inspect SRAM and warnings, flash only the identified RP2040, verify running USB CDC identity; commit.
+- [x] Establish pre-flash USB/BOOTSEL identity and preserve readable flash to ignored local backup.
+- [x] Use Task 1 tested window/touch functions in real driver. Retain attributable vendor LCD initialization table, implement control/stream logic separately.
+- [x] Add RGB bars, checkerboard, touch cursor, status and commands info/pattern/bench/touch/boot. Benchmark polling and DMA separately; include actual clocks, payload, samples and min/mean/max.
+- [x] Build ELF/UF2/map, inspect SRAM and warnings, flash only the identified RP2040, verify running USB CDC identity; commit.
 
 ### Task 3: Hardware exercise and evidence
 
 Files: tools/diagnose.py, docs/hardware/2026-10-15-bringup.md, ignored artifacts/hardware logs and backup.
 Interfaces: serial JSON-line commands/replies from Task 2, nonblocking reader with finite deadlines.
-- [ ] Run info/probe, display patterns, SPI benchmarks at actual 15.625/31.25/62.5 MHz, window tests and touch sampling during DMA.
-- [ ] Request the user's physical touch and visual observations while collecting actual samples; do independent benchmark work while waiting.
-- [ ] Record automated evidence versus user observations versus untested electrical/scanout properties. Keep raw logs and reproducible commands.
-- [ ] Run full host suite and clean firmware build; review branch; fix important findings; commit evidence and instructions.
+- [x] Run info/probe, display patterns, SPI benchmarks at actual 15.625/31.25/62.5 MHz, window tests and touch sampling during DMA.
+- [x] Request the user's physical touch and visual observations while collecting actual samples; do independent benchmark work while waiting.
+- [x] Record automated evidence versus user observations versus untested electrical/scanout properties. Keep raw logs and reproducible commands.
+- [x] Run full host suite and clean firmware build; review branch; fix important findings; commit evidence and instructions.
 
 ## Execution decision
 

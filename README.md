@@ -1,56 +1,96 @@
 # Gyrus 2040
 
-A proposed native C adaptation of **Gyruss (Konami, 1983)** for the
-Waveshare **RP2040-Touch-LCD-1.28**, with a desktop simulator for development
-before the hardware is connected.
+Native C project for a Gyruss-inspired game on the Waveshare
+**RP2040-Touch-LCD-1.28**. The architecture is approved; its board diagnostic is
+implemented and tested on the connected device. Gameplay and the Sokol
+simulator are the next milestones.
 
-## Current state
+## Tested board diagnostic
 
-Research and a concrete architecture proposal are prepared. There is **no game
-implementation, build system, simulator, or flashable firmware yet**. No device
-has been connected or measured. Performance numbers are calculated bounds,
-not benchmark results.
+The firmware drives the GC9A01 display with native RGB565/16-bit SPI DMA,
+reads capacitive touch while DMA runs, shows color bars/checkerboard/grid and a
+touch cursor, and exposes a bounded USB CDC diagnostic protocol.
 
-- [Downloaded references and provenance](reference/README.md)
-- [Display schematic, CPU/memory analysis, and optimization design](docs/research/display-performance.md)
+- CPU/peripheral/USB clocks: **125/125/48 MHz**, no CPU overclock.
+- Fast SPI: **62.5 MHz**, measured **16.148 ms** mean per full-screen DMA
+  transfer (61.93 transfers/s). This is transfer capacity, not game frame rate.
+- User confirmed clean patterns and correct touch tracking/release at the fast rate.
+- Separate 576-transfer stress run: no driver errors.
+- CST816S ID 0xB5 and QMI8658 ID 0x05 detected; IMU motion not yet qualified.
+- Actual board flash: **16 MiB**; conservative firmware link budget: 4 MiB.
+- Host sanitizer tests cover geometry, touch, malformed commands, stuck-transfer
+  recovery, and bounded serial input.
+
+See [hardware results and full reproduction steps](docs/hardware/2026-10-15-bringup.md)
+and [machine-readable measurements](docs/hardware/2026-10-15-results.json).
+
+## Build
+
+On macOS arm64 with Python 3, CMake, Ninja and Git available:
+
+```sh
+python3 tools/setup.py
+cmake --preset host
+cmake --build --preset host
+ctest --preset host
+cmake --preset firmware
+cmake --build --preset firmware
+```
+
+Setup downloads checksum-pinned local tools into `.deps/`; it does not modify
+the system compiler or run a privileged installer. Output:
+`build-rp2040/gyrus_board_diag.uf2`, ELF, linker map and disassembly.
+The SDK uses C++ runtime support files internally; all project firmware and
+portable diagnostic code is C11.
+
+## Flash and interact
+
+Hold BOOT while reconnecting USB, wait for the `RPI-RP2` drive, then:
+
+```sh
+.deps/picotool/picotool/picotool load -v -x build-rp2040/gyrus_board_diag.uf2 --vid 0x2e8a --pid 0x0003
+```
+
+This replaces the firmware beginning at flash offset zero. Back up existing
+firmware first; the original device backup from this session is kept in the
+ignored `artifacts/hardware/` directory. Select a unique board with `--ser` if
+multiple devices are connected.
+
+After USB re-enumerates:
+
+```sh
+.deps/venv/bin/python tools/diagnose.py info touch windows
+.deps/venv/bin/python tools/diagnose.py bench
+.deps/venv/bin/python tools/diagnose.py 'speed fast' 'pattern checker'
+.deps/venv/bin/python tools/diagnose.py 'stream on' --listen 30
+.deps/venv/bin/python tools/diagnose.py 'stream off'
+```
+
+Touch tracking is always enabled and shows a red marker on a grid. `boot`
+returns to BOOTSEL; wait for re-enumeration before picotool. Serial access must
+have one owner. Use `--port` when more than one Raspberry Pi serial port exists.
+
+## Architecture and research
+
+- [Approved architecture](docs/superpowers/specs/2026-10-15-gyruss-rp2040-design.md)
+- [Completed diagnostic plan](docs/superpowers/plans/2026-10-15-board-diagnostics.md)
+- [Display performance design](docs/research/display-performance.md)
 - [Game reference and level structure](docs/research/game-reference.md)
-- [Toolchain audit and library decisions](docs/research/toolchain.md)
-- [Proposed architecture for review](docs/superpowers/specs/2026-10-15-gyruss-rp2040-design.md)
+- [Original toolchain/library research](docs/research/toolchain.md)
+- [Reference pack index](reference/README.md) and [download provenance](reference/manifest.json)
+- [Third-party notices](THIRD_PARTY.md)
 
-## Recommended direction
+Important integration details: use **GPIO13** for LCD reset, explicitly select
+SPI1, and explicitly set `clk_peri` after changing `clk_sys`. Log achieved SPI
+rates; requesting 40 MHz at 125 MHz yields 31.25 MHz. No TE synchronization wire
+is exposed, so MCU buffering cannot guarantee tear-free panel scanout.
 
-Use a portable C11 simulation and indexed software renderer. Use **Pico SDK +
-SPI1 DMA** on the board, and **Sokol** to present the same pixels on desktop.
-Keep GPU/windowing APIs outside the game. The RP2040 has no Sokol graphics
-backend.
+The future game shares portable indexed drawing code between Pico SDK and a
+Sokol desktop host. The diagnostic deliberately establishes the simpler
+single-core RGB565/DMA baseline before the indexed dual-core strip pipeline.
 
-Use two 240 x 240 indexed frames, a fixed RGB565 palette, and two small DMA
-conversion strips. Start at a measured, conservative SPI rate and qualify
-62.5 MHz at a 125 MHz CPU/peripheral clock. Keep simulation at 60 Hz even when
-presentation must run at 30 Hz. Details and alternatives are in the design.
-
-## Important discoveries
-
-1. **Pin discrepancy:** the pinned Pico SDK board header says LCD reset GPIO12;
-   the Waveshare schematic and vendor C driver say **GPIO13**, with GPIO12 used
-   for LCD MISO. Use explicit project pins and override the SDK LCD reset macro.
-2. **Clock quantization:** requesting 40 MHz SPI at 125 MHz gives **31.25 MHz**.
-   Increasing CPU/peripheral clock to 133 MHz while requesting 62.5 MHz gives
-   **33.25 MHz**, not 62.5 MHz. Always report the actual achieved SPI clock.
-3. **No exposed TE signal:** the schematic's display connector has no tearing
-   synchronization output. MCU double buffering cannot guarantee tear-free
-   panel scanout.
-4. **Compiler issue:** `/usr/local/bin/arm-none-eabi-gcc` is an x86_64 executable
-   that fails with `bad CPU type in executable` on this Mac. It must be replaced
-   or bypassed with a compatible toolchain before a firmware build can pass.
-
-## Reference handling
-
-The local reference pack includes manuals, screenshots, flyers, datasheets,
-vendor archives, and selected open-source examples. These are research
-references, not game assets or installed build dependencies. Their upstream
-rights and licenses remain in effect. Downloads are excluded from Git by
-default; their URLs, sizes, and SHA-256 checksums are in
-[reference/manifest.json](reference/manifest.json). No arcade ROMs were fetched.
-
-Research date: **15 October 2026**.
+Downloaded references (32 files, about 48 MB) include schematics, datasheets,
+vendor code, arcade manuals, screenshots and flyers. They remain local and
+ignored by Git, with upstream rights retained. The original reference pack
+lives in the original project checkout when working in a linked worktree.
+No arcade ROMs or extracted game assets are included.

@@ -8,3 +8,4 @@
 /reference/software/
 /.superpowers/
 /artifacts/
+__pycache__/

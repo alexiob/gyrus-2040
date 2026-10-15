@@ -11,6 +11,8 @@ uint32_t display_baud(void);
 bool display_start(uint16_t x,uint16_t y,uint16_t w,uint16_t h,const uint16_t *pixels,size_t count,bool dma);
 bool display_wait(void (*service)(void));
 bool display_busy(void);
+/* An unacknowledged DMA abort latches a fatal fault; preserve source storage until reboot. */
+bool display_faulted(void);
 uint64_t display_last_dma_us(void);
 uint64_t display_last_total_us(void);
 unsigned display_errors(void);

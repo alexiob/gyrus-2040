@@ -13,7 +13,7 @@ static const lcd_command init_commands[] = {
 };
 static int tx_channel = -1;
 static uint32_t baud_hz;
-static bool active;
+static bool active, faulted, needs_full_redraw, full_transfer;
 static unsigned error_count;
 static uint64_t start_us, dma_us, total_us;
 
@@ -32,12 +32,24 @@ static bool wire_idle(uint64_t deadline) {
 }
 
 static void recover(void) {
-    if (tx_channel >= 0) dma_channel_abort((uint)tx_channel);
-    gpio_put(BOARD_LCD_CS,1);
-    /* A fault may interrupt a pixel. The next valid window starts a new RAMWR. */
+    bool aborted=true;
+    if (tx_channel>=0) {
+        const uint32_t mask=1u<<(uint)tx_channel;
+        dma_hw->abort=mask;
+        const uint64_t deadline=time_us_64()+10000u;
+        while ((dma_hw->abort&mask)!=0u) {
+            if (time_us_64()>=deadline) {aborted=false;break;}
+            tight_loop_contents();
+        }
+    }
+    /* Stop/reset the shifter before changing CS, even if wire idle is unreachable. */
     spi_deinit(BOARD_SPI);
-    baud_hz = spi_init(BOARD_SPI,baud_hz);
-    active = false;
+    gpio_put(BOARD_LCD_CS,1);
+    faulted=!aborted;
+    if (aborted) baud_hz=spi_init(BOARD_SPI,baud_hz);
+    /* If abort failed, leave SPI held in reset and reject every subsequent transfer. */
+    needs_full_redraw=true;
+    active=false;
     ++error_count;
 }
 
@@ -98,21 +110,24 @@ bool display_init(void) {
 }
 
 uint32_t display_set_baud(uint32_t requested) {
-    if (active || requested<1000000u || requested>62500000u) return 0;
+    if (faulted || active || requested<1000000u || requested>62500000u) return 0;
     if (!wire_idle(time_us_64()+100000u)) {recover();return 0;}
     baud_hz=spi_set_baudrate(BOARD_SPI,requested);
     return baud_hz;
 }
 uint32_t display_baud(void) {return baud_hz;}
 bool display_busy(void) {return active;}
+bool display_faulted(void) {return faulted;}
 unsigned display_errors(void) {return error_count;}
 uint64_t display_last_dma_us(void) {return dma_us;}
 uint64_t display_last_total_us(void) {return total_us;}
 
 bool display_start(uint16_t x,uint16_t y,uint16_t w,uint16_t h,const uint16_t *pixels,size_t count,bool dma) {
     uint8_t endpoints[8];
-    if (active || tx_channel<0 || pixels==NULL || count!=(size_t)w*h ||
+    const bool full=(x==0u && y==0u && w==240u && h==240u);
+    if (faulted || (needs_full_redraw && !full) || active || tx_channel<0 || pixels==NULL || count!=(size_t)w*h ||
         !diag_window_encode(x,y,w,h,endpoints)) return false;
+    full_transfer=full;
     start_us=time_us_64();dma_us=0;total_us=0;
     gpio_put(BOARD_LCD_CS,0);
     if (!command(0x2a,endpoints,4) || !command(0x2b,endpoints+4,4) || !command(0x2c,NULL,0)) {
@@ -152,5 +167,6 @@ bool display_wait(void (*service)(void)) {
     gpio_put(BOARD_LCD_CS,1);
     total_us=time_us_64()-start_us;
     active=false;
+    if (full_transfer) needs_full_redraw=false;
     return true;
 }

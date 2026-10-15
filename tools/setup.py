@@ -54,8 +54,11 @@ def main():
     if len(compilers) != 1:
         raise RuntimeError('Expected exactly one compiler in expanded package')
     toolchain = DEPS / 'toolchain'
+    expected = compilers[0].parent.parent.resolve()
+    if toolchain.exists() and toolchain.resolve() != expected:
+        raise RuntimeError("Existing .deps/toolchain differs from the verified package; move it aside and rerun setup")
     if not toolchain.exists():
-        toolchain.symlink_to(compilers[0].parent.parent, target_is_directory=True)
+        toolchain.symlink_to(expected, target_is_directory=True)
     run(toolchain/'bin/arm-none-eabi-gcc', '--version')
     archive = download(LOCK['picotool'])
     picotool = DEPS / 'picotool/picotool/picotool'

@@ -9,8 +9,9 @@ Build a native C adaptation of Konami's 1983 Gyruss for Waveshare's
 RP2040-Touch-LCD-1.28. The user confirmed the arcade reference, asked for a
 downloaded research pack and portable high-quality C, and emphasized studying
 the actual display circuit, CPU/RAM/GRAM clocks, bottlenecks and speed tricks.
-The hardware will be connected later, so development must be productive on
-desktop and firmware must be cross-buildable beforehand.
+The initial brief anticipated connecting hardware later; the board is now
+connected. Development must also remain productive on desktop, with firmware
+cross-buildable independently of device availability.
 
 Success for the first implementation is a playable desktop orbital shooter,
 the same deterministic gameplay compiled into an RP2040 UF2, meaningful host
@@ -187,10 +188,11 @@ sensor interaction and sustained operation on USB/battery.
 
 ## Delivery boundary
 
-The current deliverable is the downloaded research pack, toolchain audit,
-performance study and this proposed design. Runtime scaffolding and dependency
-installation follow design review and implementation planning. There is no
-working simulator or UF2 at this stage.
+The architecture was approved and the diagnostic milestone is now implemented.
+It includes native toolchain setup, portable model/tests, board SPI/DMA and
+touch drivers, flashed UF2, serial harness and measured hardware results. See
+[bring-up report](../../hardware/2026-10-15-bringup.md). The game, Sokol simulator
+and indexed dual-core pipeline remain later milestones.
 
 No device connection is needed for host implementation, deterministic tests,
 asset authoring, ARM cross-compilation or memory-size checks. Device-dependent

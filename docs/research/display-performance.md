@@ -1,8 +1,9 @@
 # Display, CPU, memory and interaction performance
 
-Research date: 15 October 2026. **Design analysis, not measured hardware results.**
-The device is not connected. Proposed optimizations require firmware and bench
-validation before any frame-rate or latency claim.
+Research date: 15 October 2026. The calculations below are the original design
+analysis. The device has now been connected and a diagnostic baseline tested:
+see [measured bring-up results](../hardware/2026-10-15-bringup.md). Future
+optimizations below remain proposals unless that report explicitly tests them.
 
 ## 1. Circuit and real interfaces
 
@@ -380,5 +381,6 @@ On first connection, use a separate diagnostic mode before the game:
    cannot meet its deadline, use partial updates or stable 30 Hz presentation.
    Do not hide missed deadlines by slowing the game clock.
 
-No hardware acceptance item has passed yet. A successful cross-build is useful
-but cannot validate electrical timing, scanout, touch feel or battery operation.
+The initial hardware baseline has now passed the checks listed in the linked
+bring-up report. Electrical waveform capture, environmental qualification and
+the future optimized frame pipeline remain untested.

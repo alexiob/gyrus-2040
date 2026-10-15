@@ -7,6 +7,7 @@ import sys
 import time
 import serial
 from serial.tools import list_ports
+from serial_lines import LineReader
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -37,13 +38,14 @@ def main():
             dev.dtr = True
             time.sleep(0.4)
             dev.reset_input_buffer()
+            reader = LineReader(dev)
             for command in args.commands:
                 dev.write((command + '\n').encode('ascii'))
                 expected = completions.get(command, 'pattern' if command.startswith(('pattern ', 'speed ')) else 'error')
                 deadline = time.monotonic() + args.timeout
                 while time.monotonic() < deadline:
-                    raw = dev.readline()
-                    if not raw:
+                    raw = reader.read_line(deadline)
+                    if raw is None:
                         continue
                     line = raw.decode('utf-8', errors='replace').strip()
                     if not line:
@@ -61,8 +63,8 @@ def main():
                     raise TimeoutError(f'No {expected} response to {command!r} on {port}')
             deadline = time.monotonic() + args.listen
             while time.monotonic() < deadline:
-                raw = dev.readline()
-                if raw:
+                raw = reader.read_line(deadline)
+                if raw is not None:
                     emit(raw.decode('utf-8', errors='replace').strip())
     finally:
         if log:

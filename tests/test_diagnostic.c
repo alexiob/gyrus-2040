@@ -33,6 +33,17 @@ int main(void) {
     CHECK(diag_pattern_pixel(1,8,0)==0);
     CHECK(diag_pattern_pixel(1,8,8)==0xffff);
     CHECK(diag_pattern_pixel(0,240,0)==0);
+    /* Catches embedded-NUL boot commands and proves rejection lasts to newline. */
+    diag_line line={0};
+    const uint8_t malformed[]={ 'b','o','o','t',0,'x','\n' };
+    diag_line_result result=DIAG_LINE_NONE;
+    for (size_t i=0;i<sizeof malformed;++i) result=diag_line_feed(&line,malformed[i]);
+    CHECK(result==DIAG_LINE_INVALID);
+    for (unsigned i=0;i<80u;++i) (void)diag_line_feed(&line,'a');
+    CHECK(diag_line_feed(&line,'\n')==DIAG_LINE_LONG);
+    const char *good="info\n";
+    for (size_t i=0;i<5u;++i) result=diag_line_feed(&line,(uint8_t)good[i]);
+    CHECK(result==DIAG_LINE_READY && strcmp(line.text,"info")==0);
     puts("PASS: window boundaries, coherent touch decoding, RGB565 patterns");
     return 0;
 }

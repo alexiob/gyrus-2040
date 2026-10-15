@@ -32,3 +32,23 @@ uint16_t diag_pattern_pixel(unsigned pattern, uint16_t x, uint16_t y) {
     if (x % 20u == 0u || y % 20u == 0u) return 0xffffu;
     return (uint16_t)(((x / 8u) << 11u) | ((y / 4u) << 5u));
 }
+
+/* Discard an invalid line in full; never pass embedded NUL to strcmp. */
+diag_line_result diag_line_feed(diag_line *line, uint8_t byte) {
+    if (byte == '\n' || byte == '\r') {
+        diag_line_result result=line->rejected;
+        if (result==DIAG_LINE_NONE && line->used>0u) {
+            line->text[line->used]='\0';result=DIAG_LINE_READY;
+        }
+        line->used=0;line->rejected=DIAG_LINE_NONE;
+        return result;
+    }
+    if (byte<32u || byte>126u) {
+        line->rejected=DIAG_LINE_INVALID;return DIAG_LINE_NONE;
+    }
+    if (line->rejected==DIAG_LINE_NONE) {
+        if ((size_t)line->used+1u<sizeof line->text) line->text[line->used++]=(char)byte;
+        else line->rejected=DIAG_LINE_LONG;
+    }
+    return DIAG_LINE_NONE;
+}

@@ -1,0 +1,10 @@
+#ifndef GYRUS_BOARD_H
+#define GYRUS_BOARD_H
+#include "hardware/spi.h"
+#include "hardware/i2c.h"
+enum { BOARD_LCD_DC=8, BOARD_LCD_CS=9, BOARD_LCD_SCK=10, BOARD_LCD_TX=11,
+       BOARD_LCD_RX=12, BOARD_LCD_RESET=13, BOARD_LCD_BACKLIGHT=25,
+       BOARD_SDA=6, BOARD_SCL=7, BOARD_TOUCH_IRQ=21, BOARD_TOUCH_RESET=22 };
+#define BOARD_SPI spi1
+#define BOARD_I2C i2c1
+#endif

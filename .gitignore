@@ -6,6 +6,8 @@
 /reference/hardware/
 /reference/game/
 /reference/software/
+/reference/tempest/arcade/
+/reference/tempest/2000/
 /.superpowers/
 /artifacts/
 __pycache__/

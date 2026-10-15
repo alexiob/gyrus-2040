@@ -74,7 +74,7 @@ user-supplied `gyrus-2040.mov`. The full clip is retained.
 Camera/location metadata and auxiliary data tracks are removed. The original
 MOV is not committed.
 
-The main README's collapsed on-device section uses this identical file's
+The main README's **Original hardware demo** section uses this identical file's
 [GitHub video attachment](https://github.com/user-attachments/assets/ca1884a3-ee16-48ce-9918-4bd2ffbf2fec)
 for its inline player. Keeping a copy here makes the demo available with a clone.
 GitHub's player syntax is documented in

@@ -9,6 +9,8 @@ portable headless runner for development.
 
 ## Demo
 
+### Menu and both games
+
 https://github.com/user-attachments/assets/c9fabc5a-87a6-4457-b8e2-3b7ec1dce93b
 
 *Menu + both games · 62 seconds · silent · 720 × 720 at 30 fps · 3.1 MiB.*
@@ -27,15 +29,13 @@ not camera footage of the LCD.
 | 00:31 | Pause and return to the game menu. |
 | 00:35 | Tempest: web entry, combat, Superzapper, dive, and the next web. |
 
-<details>
-<summary>Earlier Gyrus recording on the physical board</summary>
+### Original hardware demo
 
 https://github.com/user-attachments/assets/ca1884a3-ee16-48ce-9918-4bd2ffbf2fec
 
-The original [on-device demo](docs/media/gyrus-2040-demo.mp4) is also preserved:
-35 seconds, silent, 4.0 MiB. It predates the multi-game launcher.
-
-</details>
+*Gyrus running on the physical Waveshare board · 35 seconds · silent · 4.0 MiB.*
+[Download the original on-device demo](docs/media/gyrus-2040-demo.mp4).
+This recording predates the multi-game launcher.
 
 [Play](#play-on-the-board) · [Games](#games) · [Controls](#controls-and-settings) ·
 [Build](#build-and-run) · [Flash](#flash-the-board) ·

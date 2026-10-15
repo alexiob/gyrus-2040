@@ -1,6 +1,6 @@
 #ifndef GYRUS_CONTROLS_H
 #define GYRUS_CONTROLS_H
-#include "gyrus/game.h"
+#include "engine/input.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -66,6 +66,28 @@
 #define CONTROLS_CALIBRATE_X1 172u
 #define CONTROLS_CALIBRATE_Y0 216u
 #define CONTROLS_CALIBRATE_Y1 240u
+#define CONTROLS_HUB_PREV_X0 12u
+#define CONTROLS_HUB_PREV_X1 60u
+#define CONTROLS_HUB_NEXT_X0 180u
+#define CONTROLS_HUB_NEXT_X1 228u
+#define CONTROLS_HUB_ARROW_Y0 76u
+#define CONTROLS_HUB_ARROW_Y1 140u
+#define CONTROLS_HUB_PLAY_Y0 145u
+#define CONTROLS_HUB_PLAY_Y1 177u
+#define CONTROLS_HUB_SETTINGS_Y0 184u
+#define CONTROLS_HUB_SETTINGS_Y1 208u
+#define CONTROLS_STYLE_X0 66u
+#define CONTROLS_STYLE_X1 174u
+#define CONTROLS_STYLE_Y0 112u
+#define CONTROLS_STYLE_Y1 138u
+#define CONTROLS_HOME_X0 14u
+#define CONTROLS_HOME_X1 48u
+#define CONTROLS_HOME_Y0 94u
+#define CONTROLS_HOME_Y1 128u
+#define CONTROLS_SPECIAL_X0 90u
+#define CONTROLS_SPECIAL_X1 150u
+#define CONTROLS_SPECIAL_Y0 176u
+#define CONTROLS_SPECIAL_Y1 202u
 #define CONTROLS_CENTER_X 120
 #define CONTROLS_CENTER_Y 120
 #define CONTROLS_CENTER_RADIUS 36
@@ -93,7 +115,9 @@ typedef enum {
     CONTROLS_PLAY,
     CONTROLS_PAUSE,
     CONTROLS_GAME_OVER,
-    CONTROLS_SETTINGS
+    CONTROLS_SETTINGS,
+    CONTROLS_HUB,
+    CONTROLS_TEMPEST_PLAY
 } controls_screen;
 typedef enum {
     CONTROLS_TARGET_NONE,
@@ -110,7 +134,12 @@ typedef enum {
     CONTROLS_TARGET_ENEMY_UP,
     CONTROLS_TARGET_TILT_DOWN,
     CONTROLS_TARGET_TILT_UP,
-    CONTROLS_TARGET_CALIBRATE
+    CONTROLS_TARGET_CALIBRATE,
+    CONTROLS_TARGET_PREVIOUS,
+    CONTROLS_TARGET_NEXT,
+    CONTROLS_TARGET_STYLE,
+    CONTROLS_TARGET_HOME,
+    CONTROLS_TARGET_SPECIAL
 } controls_target;
 typedef struct {
     uint32_t now_ms;
@@ -134,7 +163,7 @@ typedef struct {
     bool touch_wait_release, touch_ignore_sample;
     bool fire_candidate, fire_stable, fire_blocked;
     uint32_t fire_since_ms, touch_since_ms;
-    uint16_t touch_origin_x, touch_origin_y, drag_angle;
+    uint16_t touch_origin_x, touch_origin_y, touch_last_x, touch_last_y, drag_angle;
     bool drag_valid;
     controls_target touch_target;
     bool tilt_ready, tilt_available, tilt_have_sample, tilt_calibrating;
@@ -152,6 +181,8 @@ void controls_init(controls_state *state);
 void controls_set_mode(controls_state *state, controls_mode mode);
 /* Call before update when the touch bus/read fails; suppresses release actions. */
 void controls_cancel_touch(controls_state *state);
+/* Consume held touch/BOOT after changing active games, retaining tilt calibration. */
+void controls_consume_inputs(controls_state *state);
 void controls_tilt_reset(controls_state *state);
 bool controls_tilt_ready(const controls_state *state);
 uint16_t controls_tilt_progress(const controls_state *state, uint32_t now_ms);

@@ -79,3 +79,15 @@ These snapshots are not wired into a build. Keep the corresponding upstream
 licenses when vendoring selected components during implementation. MAME's
 driver file has its own BSD-3-Clause header; the entire MAME project has broader
 licensing, and its license does not license original arcade ROM content.
+
+## Tempest and Tempest 2000
+
+Retrieved 16 October 2026. [Arcade provenance](tempest/arcade-manifest.json) and
+[Tempest 2000 provenance](tempest/2000-manifest.json) record downloaded manuals,
+contemporary artwork and reference pages with sizes and SHA-256 hashes. The
+downloads live in ignored `tempest/arcade/` and `tempest/2000/` directories.
+
+Read the [1981 research](../docs/research/tempest-arcade.md) and
+[1994 research](../docs/research/tempest-2000.md) for primary-source findings,
+conflicts, gameplay mapping and implementation boundaries. Runtime vector art
+is independently authored; no ROM images or extracted Atari assets are used.

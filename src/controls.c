@@ -12,7 +12,27 @@ static int32_t radius_squared(uint16_t x, uint16_t y) {
 controls_target controls_hit_test(controls_screen screen, uint16_t x, uint16_t y) {
     if (x >= 240u || y >= 240u)
         return CONTROLS_TARGET_NONE;
-    if (screen == CONTROLS_TITLE || screen == CONTROLS_GAME_OVER) {
+    if (screen == CONTROLS_HUB) {
+        if (in_rect(x, y, CONTROLS_HUB_PREV_X0, CONTROLS_HUB_PREV_X1, CONTROLS_HUB_ARROW_Y0,
+                    CONTROLS_HUB_ARROW_Y1))
+            return CONTROLS_TARGET_PREVIOUS;
+        if (in_rect(x, y, CONTROLS_HUB_NEXT_X0, CONTROLS_HUB_NEXT_X1, CONTROLS_HUB_ARROW_Y0,
+                    CONTROLS_HUB_ARROW_Y1))
+            return CONTROLS_TARGET_NEXT;
+        if (in_rect(x, y, 60, 180, CONTROLS_HUB_PLAY_Y0, CONTROLS_HUB_PLAY_Y1))
+            return CONTROLS_TARGET_START;
+        if (in_rect(x, y, 60, 180, CONTROLS_HUB_SETTINGS_Y0, CONTROLS_HUB_SETTINGS_Y1))
+            return CONTROLS_TARGET_SETTINGS;
+        if (in_rect(x, y, CONTROLS_STYLE_X0, CONTROLS_STYLE_X1, CONTROLS_STYLE_Y0,
+                    CONTROLS_STYLE_Y1))
+            return CONTROLS_TARGET_STYLE;
+        if (in_rect(x, y, CONTROLS_CALIBRATE_X0, CONTROLS_CALIBRATE_X1, CONTROLS_CALIBRATE_Y0,
+                    CONTROLS_CALIBRATE_Y1) &&
+            radius_squared(x, y) <= 120 * 120)
+            return CONTROLS_TARGET_CALIBRATE;
+    } else if (screen == CONTROLS_TITLE || screen == CONTROLS_GAME_OVER) {
+        if (in_rect(x, y, CONTROLS_HOME_X0, CONTROLS_HOME_X1, CONTROLS_HOME_Y0, CONTROLS_HOME_Y1))
+            return CONTROLS_TARGET_HOME;
         if (in_rect(x, y, CONTROLS_START_X0, CONTROLS_START_X1, CONTROLS_START_Y0,
                     CONTROLS_START_Y1))
             return CONTROLS_TARGET_START;
@@ -59,7 +79,11 @@ controls_target controls_hit_test(controls_screen screen, uint16_t x, uint16_t y
         for (unsigned i = 0; i < sizeof items / sizeof items[0]; ++i)
             if (in_rect(x, y, items[i].x0, items[i].x1, items[i].y0, items[i].y1))
                 return items[i].target;
-    } else if (screen == CONTROLS_PLAY &&
+    } else if (screen == CONTROLS_TEMPEST_PLAY &&
+               in_rect(x, y, CONTROLS_SPECIAL_X0, CONTROLS_SPECIAL_X1, CONTROLS_SPECIAL_Y0,
+                       CONTROLS_SPECIAL_Y1)) {
+        return CONTROLS_TARGET_SPECIAL;
+    } else if ((screen == CONTROLS_PLAY || screen == CONTROLS_TEMPEST_PLAY) &&
                radius_squared(x, y) <= CONTROLS_CENTER_RADIUS * CONTROLS_CENTER_RADIUS) {
         return CONTROLS_TARGET_PAUSE;
     }
@@ -85,6 +109,12 @@ void controls_cancel_touch(controls_state *state) {
     state->touch_wait_release = true;
     state->touch_ignore_sample = true;
     state->drag_valid = false;
+}
+void controls_consume_inputs(controls_state *state) {
+    if (!state)
+        return;
+    controls_cancel_touch(state);
+    state->screen_valid = false;
 }
 const char *controls_mode_name(controls_mode mode) {
     if (mode == CONTROLS_TILT)
@@ -349,6 +379,7 @@ controls_output controls_update(controls_state *state, controls_sample sample,
     controls_output out = {0};
     if (state == NULL)
         return out;
+    bool playing = screen == CONTROLS_PLAY || screen == CONTROLS_TEMPEST_PLAY;
     bool fire_rise = false;
     if (sample.fire_pressed != state->fire_candidate) {
         state->fire_candidate = sample.fire_pressed;
@@ -372,7 +403,9 @@ controls_output controls_update(controls_state *state, controls_sample sample,
         state->fire_blocked = sample.fire_pressed || state->fire_stable;
     }
     if (!state->fire_blocked) {
-        if (screen == CONTROLS_PLAY)
+        if (screen == CONTROLS_TEMPEST_PLAY)
+            out.input.special = fire_rise;
+        else if (screen == CONTROLS_PLAY)
             out.input.fire = state->fire_stable;
         else if (fire_rise) {
             if (screen == CONTROLS_SETTINGS)
@@ -386,7 +419,7 @@ controls_output controls_update(controls_state *state, controls_sample sample,
     if (state->mode == CONTROLS_TILT) {
         int16_t steering = tilt_input(state, &sample);
         state->tilt_preview_value = (int16_t)((int32_t)steering * 1000 / 900);
-        if (screen == CONTROLS_PLAY)
+        if (playing)
             out.input.angle_delta = steering;
     }
     bool invalid = sample.touch_invalid || state->touch_ignore_sample ||
@@ -417,6 +450,8 @@ controls_output controls_update(controls_state *state, controls_sample sample,
         state->drag_valid = false;
     }
     if (sample.touch_pressed && state->touch_down) {
+        state->touch_last_x = sample.touch_x;
+        state->touch_last_y = sample.touch_y;
         if (state->touch_target != CONTROLS_TARGET_NONE) {
             int dx = (int)sample.touch_x - (int)state->touch_origin_x;
             int dy = (int)sample.touch_y - (int)state->touch_origin_y;
@@ -429,7 +464,7 @@ controls_output controls_update(controls_state *state, controls_sample sample,
                 out.reboot_requested = true;
                 state->reboot_sent = true;
             }
-        } else if (screen == CONTROLS_PLAY && !state->touch_cancelled) {
+        } else if (playing && !state->touch_cancelled) {
             int32_t r2 = radius_squared(sample.touch_x, sample.touch_y);
             if (state->mode == CONTROLS_SPLIT_HOLD) {
                 if (r2 > CONTROLS_CENTER_RADIUS * CONTROLS_CENTER_RADIUS && r2 <= 120 * 120) {
@@ -461,6 +496,33 @@ controls_output controls_update(controls_state *state, controls_sample sample,
         if (!state->touch_cancelled && !state->reboot_sent &&
             sample.now_ms - state->touch_since_ms <= 650u) {
             switch (state->touch_target) {
+            case CONTROLS_TARGET_PREVIOUS:
+                out.input.navigate = -1;
+                break;
+            case CONTROLS_TARGET_NEXT:
+                out.input.navigate = 1;
+                break;
+            case CONTROLS_TARGET_STYLE:
+                out.input.menu_action = GAME_MENU_EFFECTS;
+                break;
+            case CONTROLS_TARGET_HOME:
+                out.input.home = true;
+                break;
+            case CONTROLS_TARGET_SPECIAL:
+                out.input.special = true;
+                break;
+            case CONTROLS_TARGET_NONE:
+                if (screen == CONTROLS_HUB) {
+                    int dx = (int)state->touch_last_x - state->touch_origin_x;
+                    int dy = (int)state->touch_last_y - state->touch_origin_y;
+                    if (dy >= -40 && dy <= 40) {
+                        if (dx >= 28)
+                            out.input.navigate = -1;
+                        else if (dx <= -28)
+                            out.input.navigate = 1;
+                    }
+                }
+                break;
             case CONTROLS_TARGET_START:
                 out.input.start = true;
                 break;

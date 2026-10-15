@@ -38,3 +38,11 @@ ffmpeg -i SOURCE.mov \
 FFmpeg applies the source's rotation before scaling, so playback does not rely
 on camera orientation metadata. The encoding was checked by decoding the full
 file and probing the resulting streams and MP4 atom order.
+
+## Shared arcade screenshots
+
+`arcade-launcher.png`, `tempest-gameplay.png`, `tempest-entry.png`, and
+`tempest-flight.png` are native-resolution 240×240
+indexed frames expanded to PNG by the CRC-checked USB G1 capture client. They
+show independently authored launcher/vector graphics from the shared firmware.
+They contain no camera data or downloaded arcade artwork.

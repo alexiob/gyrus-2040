@@ -12,7 +12,9 @@ typedef enum {
     GYRUS_DEBUG_PAUSE,
     GYRUS_DEBUG_RESUME,
     GYRUS_DEBUG_LEVEL,
-    GYRUS_DEBUG_RESET
+    GYRUS_DEBUG_RESET,
+    GYRUS_DEBUG_GAME,
+    GYRUS_DEBUG_HOME
 } gyrus_debug_action;
 enum {
     GYRUS_INPUT_TURN = 1u,
@@ -21,14 +23,19 @@ enum {
     GYRUS_INPUT_START = 8u,
     GYRUS_INPUT_PAUSE = 16u,
     GYRUS_INPUT_QUIT = 32u,
-    GYRUS_INPUT_MENU = 64u
+    GYRUS_INPUT_MENU = 64u,
+    GYRUS_INPUT_SPECIAL = 128u,
+    GYRUS_INPUT_HOME = 256u,
+    GYRUS_INPUT_NAVIGATE = 512u
 };
 typedef struct {
-    uint8_t mask;
+    uint16_t mask;
     int8_t turn;
     int16_t angle_delta;
-    uint8_t menu_action; /*0..8, one game menu pulse. */
+    uint8_t menu_action; /*0..9, one game menu pulse. */
     bool fire, start, pause, quit;
+    bool special, home;
+    int8_t navigate;
 } gyrus_debug_input;
 typedef struct {
     uint16_t width, height, palette_count;
@@ -44,6 +51,7 @@ typedef struct {
     bool (*action)(void *, gyrus_debug_action, uint32_t);
     bool (*input)(void *, const gyrus_debug_input *);
     bool (*frame)(void *, gyrus_debug_frame *); /* Stable until feed returns. */
+    bool (*catalogue)(void *, char *, size_t);  /* Optional bounded JSON object. */
 } gyrus_debug_callbacks;
 typedef struct {
     gyrus_debug_callbacks callbacks;

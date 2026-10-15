@@ -1,26 +1,15 @@
 #include "gyrus/game.h"
+#include "engine/math.h"
 #include <limits.h>
 #include <string.h>
 
-static const int16_t sine[256] = {
-#include "sine_table.inc"
-};
 static uint16_t add_angle(uint16_t a, int32_t delta) {
     return (uint16_t)((int32_t)a + delta);
 }
-int16_t game_sin_q15(uint16_t angle) {
-    return sine[angle >> 8u];
-}
-int16_t game_cos_q15(uint16_t angle) {
-    return sine[(uint8_t)((angle >> 8u) + 64u)];
-}
+int16_t game_sin_q15(uint16_t angle) { return engine_sin_q15(angle); }
+int16_t game_cos_q15(uint16_t angle) { return engine_cos_q15(angle); }
 void game_polar(uint16_t angle, int32_t radius, int16_t *x, int16_t *y) {
-    if (radius > 200 * 256)
-        radius = 200 * 256;
-    if (radius < -200 * 256)
-        radius = -200 * 256;
-    *x = (int16_t)(120 + ((int32_t)game_sin_q15(angle) * radius) / 8388608);
-    *y = (int16_t)(120 - ((int32_t)game_cos_q15(angle) * radius) / 8388608);
+    engine_polar(angle, radius, x, y);
 }
 static uint32_t random_word(game_state *g) {
     uint32_t x = g->rng;
@@ -110,28 +99,14 @@ void game_start(game_state *g) {
 bool game_set_setting(game_state *g, game_setting setting, int32_t value) {
     if (!g)
         return false;
-    switch (setting) {
-    case GAME_SETTING_FIRE_RATE:
-        if (value < 1 || value > 10)
-            return false;
-        if (g->settings.fire_rate != (uint8_t)value) {
-            g->settings.fire_rate = (uint8_t)value;
-            g->fire_cooldown = 0;
-            g->fire_rate_remainder = 0;
-        }
-        return true;
-    case GAME_SETTING_ENEMY_SPEED:
-        if (value < 25 || value > 200 || value % 25 != 0)
-            return false;
-        g->settings.enemy_speed_percent = (uint16_t)value;
-        return true;
-    case GAME_SETTING_TILT_SENSITIVITY:
-        if (value < 50 || value > 200 || value % 25 != 0)
-            return false;
-        g->settings.tilt_sensitivity_percent = (uint16_t)value;
-        return true;
+    const uint8_t old_rate = g->settings.fire_rate;
+    if (!engine_settings_set(&g->settings, setting, value))
+        return false;
+    if (g->settings.fire_rate != old_rate) {
+        g->fire_cooldown = 0;
+        g->fire_rate_remainder = 0;
     }
-    return false;
+    return true;
 }
 static void pause_action(game_state *g, game_menu_action action) {
     if (action == GAME_MENU_SETTINGS) {

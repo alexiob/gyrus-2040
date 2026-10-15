@@ -91,6 +91,9 @@ static bool action(void *ctx, gyrus_debug_action action, uint32_t n) {
         return true;
     case GYRUS_DEBUG_LEVEL:
         return game_set_stage(a->game, n);
+    case GYRUS_DEBUG_GAME:
+    case GYRUS_DEBUG_HOME:
+        return false;
     case GYRUS_DEBUG_RESET:
         game_init(a->game, n);
         a->input = (game_input){0};
@@ -131,5 +134,5 @@ void gyrus_debug_game_init(gyrus_debug_game *a, game_state *s, uint8_t *fb,
     *a = (gyrus_debug_game){.game = s, .framebuffer = fb, .write = write, .write_context = ctx};
 }
 gyrus_debug_callbacks gyrus_debug_game_callbacks(gyrus_debug_game *a) {
-    return (gyrus_debug_callbacks){a, write_bytes, state, set, action, input, frame};
+    return (gyrus_debug_callbacks){a, write_bytes, state, set, action, input, frame, NULL};
 }

@@ -142,3 +142,13 @@ so flashing/build scripts continue working; the firmware now contains both games
    and measure render/presentation and simulation time. Preserve USB recovery.
 7. Deliver research, engine/game documentation, graphical launcher/title
    captures and a branch commit history. Keep the main-branch README demo intact.
+
+## Transition and action effects
+
+Tempest also needs an explicit animated web-entry sequence, web-clear/dive/exit
+effects and action feedback during combat. Entry timing is an authored fixed
+phase before enemy spawning. Cosmetic events use bounded storage, deterministic
+render-only variation and no gameplay RNG. Shot, hit, enemy arrival, Pulsar and
+Superzapper feedback must be visible in the vector style, with richer bounded
+trails/glow/sparks in neon. Pause freezes their visual lifetime. Existing game
+rules, topology, scoring and optional-style equivalence remain required.

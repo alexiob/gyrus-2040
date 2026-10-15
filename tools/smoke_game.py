@@ -40,6 +40,7 @@ def run():
         dev.reset_input_buffer()
         for peer in (device, native):
             peer.request('PAUSE')
+            peer.request('GAME gyrus')
             peer.request('RESET 2040')
             peer.request('SET invincible 1')
             peer.request('SET control_mode 0')

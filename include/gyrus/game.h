@@ -1,16 +1,18 @@
 #ifndef GYRUS_GAME_H
 #define GYRUS_GAME_H
+#include "engine/display.h"
+#include "engine/input.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#define GAME_WIDTH 240u
-#define GAME_HEIGHT 240u
+#define GAME_WIDTH ENGINE_WIDTH
+#define GAME_HEIGHT ENGINE_HEIGHT
 #define GAME_ENEMIES 48u
 #define GAME_SHOTS 48u
 #define GAME_HOSTILE_SHOTS 48u
 #define GAME_PARTICLES 24u
 #define GAME_STARS 64u
-#define GAME_TICK_HZ 60u
+#define GAME_TICK_HZ ENGINE_TICK_HZ
 #define GAME_CLEAR_TICKS 30u
 #define GAME_CHANCE_RESULT_TICKS 120u
 #define GAME_WARP_TICKS 90u
@@ -27,33 +29,6 @@ typedef enum {
     GAME_CLEAR,
     GAME_WARP
 } game_phase;
-typedef enum {
-    GAME_MENU_NONE,
-    GAME_MENU_SETTINGS,
-    GAME_MENU_BACK,
-    GAME_MENU_FIRE_DOWN,
-    GAME_MENU_FIRE_UP,
-    GAME_MENU_ENEMY_DOWN,
-    GAME_MENU_ENEMY_UP,
-    GAME_MENU_TILT_DOWN,
-    GAME_MENU_TILT_UP
-} game_menu_action;
-typedef enum {
-    GAME_SETTING_FIRE_RATE,
-    GAME_SETTING_ENEMY_SPEED,
-    GAME_SETTING_TILT_SENSITIVITY
-} game_setting;
-typedef struct {
-    uint8_t fire_rate;                 /* Volleys/second,1..10. Default5. */
-    uint16_t enemy_speed_percent;      /*25..200 in25% steps;100=the current tuned speed. */
-    uint16_t tilt_sensitivity_percent; /*50..200 in25% steps;100=the current gain. */
-} game_settings;
-typedef struct {
-    int8_t turn;
-    int16_t angle_delta;
-    bool fire, start, pause, quit;
-    game_menu_action menu_action;
-} game_input;
 typedef struct {
     int32_t radius;
     uint16_t angle;

@@ -1,4 +1,4 @@
-# G1 game debug protocol
+# G1 arcade debug protocol
 
 The RP2040 USB CDC endpoint, desktop loopback socket, and headless process use the
 same ordered request/response protocol. The connection contains protocol bytes
@@ -43,7 +43,10 @@ sending the next request, especially over USB.
 | Command | Arguments | Behavior |
 | --- | --- | --- |
 | `HELLO` | none | Reports protocol name, maximum line length and step count. |
-| `STATE` | none | Reports a `state` JSON object including a deterministic hash. |
+| `STATE` | none | Reports launcher state, or active game state with a deterministic hash. |
+| `GAMES` | none | Returns a `catalogue` object: game IDs/slugs, selection, capabilities, high scores, effects, hub/frozen flags. |
+| `GAME` | `gyrus`, `tempest`, or numeric ID | Selects and initializes a game title; clears injected input and consumes held physical contacts. |
+| `HOME` | none | Saves the active record and returns to the launcher. |
 | `INPUT` | one or more `key=value` tokens | Changes only the supplied input fields. |
 | `STEP` | integer 1..3600 | Calls the simulation update exactly this many times. |
 | `SET` | field, signed 32-bit integer | Mutates one allowlisted scalar after range validation. |
@@ -54,13 +57,19 @@ sending the next request, especially over USB.
 | `FRAME` | none | Returns indexed pixels and an RGB565 palette as described below. |
 
 `INPUT` keys: `turn` (-1, 0, 1), `angle_delta` (-32768..32767), and `fire`,
-`start`, `pause`, `quit` (0 or 1), plus `menu` (0..8). Duplicate or unknown keys reject the entire
+`start`, `pause`, `quit` (0 or 1), plus `menu` (0..9), `navigate` (-1, 0, 1), and `special`, `home` (0 or 1). Duplicate or unknown keys reject the entire
 request. `turn` and `fire` persist until changed. The other fields are pulses,
 consumed on the next simulation tick. For example `INPUT start=1`, then `STEP 1`
 starts a run. Positive rotation is clockwise; angle 0 points up and 16384 right.
 A full turn is 65536 angle units. Inputs can be combined with physical controls.
 
-The shared adapter permits `SET` only for `score` / `high_score`
+Tempest accepts `special=1` for a Superzapper pulse. `navigate` changes launcher
+selection, `home` returns to it, and `menu=9` toggles Tempest classic/neon style
+while in the launcher. `SET effects 0|1` also works there. Effects never change
+the simulation hash. G1 RESET retains the selected game and shows its title;
+reboot shows the launcher and clears all RAM records.
+
+The Gyrus adapter permits `SET` only for `score` / `high_score`
 (0..99999999), `lives` (0..99), `ship_angle` (0..65535), `invincible`,
 `autofire`, and `double_fire` (0 or 1), plus `control_mode` (0 hold, 1 border
 drag, 2 tilt). If the adapter has an attached controls state, selecting a mode
@@ -174,10 +183,11 @@ retain pointers to stack buffers. FRAME palette/pixel pointers must remain
 stable until `gyrus_debug_feed` returns. Unsupported callback operations return
 `unavailable` or `rejected`.
 
-`gyrus/debug_game.h` supplies the allowlisted adapter shared by firmware and
-hosts. Initialize it with game/framebuffer pointers and an output callback;
-obtain callbacks with `gyrus_debug_game_callbacks`, then initialize the parser.
-FRAME uses the same `game_render` function, including its controls UI, as the
-physical display and desktop. An automatic scheduler checks `adapter.frozen` before ticking and calls
-`gyrus_debug_game_tick` to consume pulse inputs. Poll/feed requests between
+`engine/debug_session.h` supplies the shared session adapter used by firmware and
+hosts. It delegates active-game inspection and mutations to the registry.
+`gyrus/debug_game.h` remains the standalone Gyrus compatibility adapter. Initialize it with game/framebuffer pointers and an output callback;
+obtain callbacks with `engine_debug_session_callbacks`, then initialize the parser.
+FRAME uses the same `engine_render` function, including its controls UI, as the
+physical display and desktop. The automatic scheduler calls `engine_update`; it checks `engine.frozen` while
+still sampling calibration and menus. Explicit STEP uses `engine_tick` to consume pulses. Poll/feed requests between
 simulation ticks on the same thread. Keep normal logs off the debug transport.

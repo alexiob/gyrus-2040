@@ -138,7 +138,7 @@ The client uses the Python standard library for subprocess/TCP and PNG output.
 USB serial additionally needs the pinned pyserial dependency.
 
 ```sh
-python3 tools/gyrusctl.py --headless build/gyrus_headless STATE
+python3 tools/gyrusctl.py --headless build-host/gyrus_headless STATE
 python3 tools/gyrusctl.py --tcp 20400 PAUSE
 python3 tools/gyrusctl.py --tcp 20400 INPUT fire=1 turn=1
 python3 tools/gyrusctl.py --tcp 20400 STEP 120
@@ -191,3 +191,15 @@ FRAME uses the same `engine_render` function, including its controls UI, as the
 physical display and desktop. The automatic scheduler calls `engine_update`; it checks `engine.frozen` while
 still sampling calibration and menus. Explicit STEP uses `engine_tick` to consume pulses. Poll/feed requests between
 simulation ticks on the same thread. Keep normal logs off the debug transport.
+
+## Gyrus wave diagnostics
+
+Gyrus STATE adds `spawned`, `destroyed`, `escaped`, `stage_target`,
+`entrance_complete`, `entrance_kills` and `enemy_modes`. The six mode counts are
+ENTER, HOLD, ATTACK, RETURN, final ESCAPE and offscreen RETURN, in that order.
+Offscreen returning fighters count as living and cannot complete combat.
+
+`SET clear_stage 1` is accepted only during Gyrus combat or a chance stage. It
+resolves the scheduled roster coherently; the next STEP enters the ordinary
+clear/bonus transition. It is an intentional debugging mutation, not an
+autoplay or normal completion rule. Other values and menu contexts are rejected.

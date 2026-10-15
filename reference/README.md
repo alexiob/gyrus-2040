@@ -91,3 +91,11 @@ Read the [1981 research](../docs/research/tempest-arcade.md) and
 [1994 research](../docs/research/tempest-2000.md) for primary-source findings,
 conflicts, gameplay mapping and implementation boundaries. Runtime vector art
 is independently authored; no ROM images or extracted Atari assets are used.
+
+## Gyruss wave correction evidence
+
+The [wave lifecycle study](../docs/research/gyruss-waves.md) adds inspected
+manufacturer-manual pages, contemporary JoyStik strategy and direct recording
+observations. [Wave provenance](gyruss-wave-manifest.json) records the additional
+local magazine scan; it remains ignored under `game/`. Unverified later control
+points and conflicting fifth-group thresholds are explicitly identified.

@@ -11,9 +11,13 @@ static void write_bytes(void *ctx, const void *p, size_t n) {
 static bool state(void *ctx, char *out, size_t cap) {
     gyrus_debug_game *a = ctx;
     const game_state *s = a->game;
-    unsigned enemies = 0, shots = 0, hostile = 0;
-    for (unsigned i = 0; i < GAME_ENEMIES; i++)
-        enemies += s->enemies[i].active != 0;
+    unsigned enemies = 0, shots = 0, hostile = 0, modes[6] = {0};
+    for (unsigned i = 0; i < GAME_ENEMIES; i++) {
+        const game_enemy *e = &s->enemies[i];
+        enemies += e->active != 0;
+        if (e->active && e->kind <= 2u && e->mode < 6u)
+            ++modes[e->mode];
+    }
     for (unsigned i = 0; i < GAME_SHOTS; i++)
         shots += s->shots[i].active != 0;
     for (unsigned i = 0; i < GAME_HOSTILE_SHOTS; i++)
@@ -26,7 +30,10 @@ static bool state(void *ctx, char *out, size_t cap) {
         "\"invincible\":%s,\"autofire\":%s,\"frozen\":%s,\"control_mode\":%u,\"reboot_progress\":%"
         "u,\"tilt_ready\":%s,\"enemies\":%u,\"shots\":%u,\"hostile_shots\":%u,\"hash\":%" PRIu32
         ",\"pause_settings\":%s,\"fire_rate\":%u,\"enemy_speed\":%u,\"tilt_sensitivity\":%u,\"tilt_"
-        "progress\":%u,\"tilt_preview\":%d}",
+        "progress\":%u,\"tilt_preview\":%d,"
+        "\"spawned\":%u,\"destroyed\":%u,\"escaped\":%u,\"entrance_complete\":%s,"
+        "\"enemy_modes\":[%u,%u,%u,%u,%u,%u],\"stage_target\":%u,"
+        "\"entrance_kills\":[%u,%u,%u,%u,%u]}",
         s->tick, s->rng, s->score, s->high_score, (unsigned)s->lives, (unsigned)s->stage,
         (unsigned)s->planet, (unsigned)s->warp, (unsigned)s->double_fire, game_phase_name(s->phase),
         (unsigned)s->ship_angle, (unsigned)s->phase_ticks, s->invincible ? "true" : "false",
@@ -34,12 +41,19 @@ static bool state(void *ctx, char *out, size_t cap) {
         (unsigned)s->reboot_progress, s->tilt_ready ? "true" : "false", enemies, shots, hostile,
         game_state_hash(s), s->pause_settings ? "true" : "false", (unsigned)s->settings.fire_rate,
         (unsigned)s->settings.enemy_speed_percent, (unsigned)s->settings.tilt_sensitivity_percent,
-        (unsigned)s->tilt_progress, (int)s->tilt_preview);
+        (unsigned)s->tilt_progress, (int)s->tilt_preview, (unsigned)s->spawned,
+        (unsigned)s->destroyed, (unsigned)s->escaped, s->entrance_complete ? "true" : "false",
+        modes[0], modes[1], modes[2], modes[3], modes[4], modes[5], (unsigned)s->stage_target,
+        (unsigned)s->entrance_kills[0], (unsigned)s->entrance_kills[1],
+        (unsigned)s->entrance_kills[2], (unsigned)s->entrance_kills[3],
+        (unsigned)s->entrance_kills[4]);
     return n > 0 && (size_t)n < cap;
 }
 static bool set(void *ctx, const char *key, int32_t n) {
     gyrus_debug_game *a = ctx;
     game_state *s = a->game;
+    if (!strcmp(key, "clear_stage"))
+        return n == 1 && game_debug_complete_stage(s);
     if (!strcmp(key, "fire_rate"))
         return game_set_setting(s, GAME_SETTING_FIRE_RATE, n);
     if (!strcmp(key, "enemy_speed"))

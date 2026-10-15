@@ -94,3 +94,14 @@ watched frame by frame, or used to claim measured timings. No ROMs, extracted
 sprite sheets or original sound recordings have been downloaded. Exact
 artwork/music reproduction is outside the current evidence pack; the initial
 runtime can be fully self-contained with newly authored assets.
+
+## Wave implementation update · 16 October 2026
+
+The [wave evidence study](gyruss-waves.md) refines the lifecycle above. The
+implementation now retains offscreen returning fighters, gates coordinated
+attacks on entrance assembly, uses stable formation identities and six authored
+path families, and limits terminal escapes to the final two. A once-only fifth
+group and entrance bonuses are implemented with the documented source limits.
+The old global enemy-age expiry has been removed. Exact original control points
+and the fifth-group trigger remain unverified; current tuning is labeled in
+the [gameplay guide](../gameplay.md).

@@ -62,13 +62,24 @@ def run():
             ('settings-back', ['INPUT menu=2', 'STEP 1']),
             ('settings-resumed', ['INPUT pause=1', 'STEP 120']),
         ]
-        # Fixed-seed, no-fire formations finish after known simulation calls.
-        # Check the phase too: matching pixels alone could compare two wrong paths.
+        # Explicit debug completion isolates transition choreography from combat.
+        # No-fire ordinary enemies must now persist and repeatedly return.
         expected_phases = {}
-        for stage, finish in ((1, 1350), (2, 1350), (3, 614), (22, 1350)):
+        persistent_stages = {}
+        for stage in (1, 4, 8, 12, 16, 20):
+            prefix = f'planet-{stage}'
+            setup = ['RESET 2040', 'SET control_mode 0', 'SET invincible 1',
+                     'SET autofire 0', f'LEVEL {stage}', 'STEP 220']
+            cases.append((prefix + '-entry-1', setup))
+            for group in (2, 3, 4):
+                cases.append((prefix + f'-entry-{group}', ['STEP 216']))
+            cases.append((prefix + '-assembled', ['STEP 350']))
+            cases.append((prefix + '-persistent', ['STEP 3600']))
+            persistent_stages[prefix + '-persistent'] = stage
+        for stage in (1, 2, 3, 22):
             prefix = f'transition-{stage}'
             setup = ['RESET 2040', 'SET control_mode 0', 'SET invincible 1',
-                     'SET autofire 0', f'LEVEL {stage}', f'STEP {finish}']
+                     'SET autofire 0', f'LEVEL {stage}', 'STEP 100', 'SET clear_stage 1', 'STEP 1']
             cases.append((prefix + '-clear', setup))
             expected_phases[prefix + '-clear'] = 'clear'
             clear_ticks = 120 if stage == 3 else 30
@@ -92,6 +103,10 @@ def run():
             ds = device.request('STATE')[0]['state']
             ns = native.request('STATE')[0]['state']
             assert ds['hash'] == ns['hash'], (label, ds, ns)
+            if label in persistent_stages:
+                assert ds['phase'] == 'play' and ds['stage'] == persistent_stages[label], (label, ds)
+                assert ds['destroyed'] == ds['escaped'] == 0 and ds['spawned'] == 40, (label, ds)
+                assert sum(ds['enemy_modes']) == 40, (label, ds)
             if label in expected_phases:
                 assert ds['phase'] == expected_phases[label], (label, ds)
             df, dpng = device.request('FRAME')

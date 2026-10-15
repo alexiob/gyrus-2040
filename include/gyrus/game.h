@@ -29,12 +29,22 @@ typedef enum {
     GAME_CLEAR,
     GAME_WARP
 } game_phase;
+/* Modes retain their original numeric values for rendering/debug consumers. */
+typedef enum {
+    GAME_ENEMY_ENTER,
+    GAME_ENEMY_HOLD,
+    GAME_ENEMY_ATTACK,
+    GAME_ENEMY_RETURN,
+    GAME_ENEMY_ESCAPE,
+    GAME_ENEMY_OUTSIDE_RETURN
+} game_enemy_mode;
 typedef struct {
     int32_t radius;
     uint16_t angle;
     uint16_t age;
     uint8_t kind, mode, hp, active;
     int16_t angular_speed;
+    uint8_t formation, member, attacks; /* Stable wave identity; completed sorties saturate. */
 } game_enemy;
 typedef struct {
     int32_t radius;
@@ -62,6 +72,10 @@ typedef struct game_state {
     game_settings settings;
     uint8_t fire_rate_remainder, enemy_time_remainder;
     uint16_t enemy_ticks;
+    uint16_t combat_ticks, final_escape_ticks, fifth_spawn_tick;
+    bool entrance_complete, fifth_decided;
+    uint8_t entrance_kills[5];
+    uint8_t fifth_path_planet, fifth_path_formation;
     bool pause_settings;       /* Settings page in Title/Over/Paused; gates menu actions. */
     bool clear_chance;         /* Current clear sequence is a chance-stage result. */
     uint32_t transition_bonus; /* Awarded once when the chance result begins. */
@@ -78,6 +92,8 @@ void game_start(game_state *state);
 bool game_set_setting(game_state *state, game_setting setting, int32_t value);
 void game_step(game_state *state, const game_input *input);
 bool game_set_stage(game_state *state, unsigned stage);
+/* Explicit debug mutation: resolve a playable stage; next step follows normal clear flow. */
+bool game_debug_complete_stage(game_state *state);
 /* Canonical deterministic state hash, excludes padding. */
 uint32_t game_state_hash(const game_state *state);
 int16_t game_sin_q15(uint16_t angle);

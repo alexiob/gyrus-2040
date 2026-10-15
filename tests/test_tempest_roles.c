@@ -27,7 +27,90 @@ static unsigned count(const tempest_state *s) {
         n += s->enemies[i].active != 0;
     return n;
 }
+static void pursuit_and_contact(void) {
+    engine_input still = {0};
+    tempest_state s = fresh(1);
+    /* Keep a deep waiting threat so the documented rim-only clear exception
+       cannot end this controlled pursuit encounter prematurely. */
+    s.enemies[1] = (tempest_enemy){.active = 1, .landed = 0, .timer = 60000};
+    s.enemies[0] = foe(TEMPEST_FLIPPER, 5, TEMPEST_DEPTH);
+    s.enemies[0].rim = 1;
+    s.enemies[0].direction = 1;
+    tempest_step(&s, &still);
+    assert(s.enemies[0].direction == -1); /* Shortest closed-web route toward claw. */
+    s = fresh(8);
+    s.enemies[1] = (tempest_enemy){.active = 1, .timer = 60000};
+    s.enemies[0] = foe(TEMPEST_FLIPPER, 8, TEMPEST_DEPTH);
+    s.enemies[0].rim = 1;
+    s.enemies[0].direction = 1;
+    tempest_step(&s, &still);
+    assert(s.enemies[0].direction == -1);
+    /* A late pounce cannot be erased by a shot created after contact. */
+    s = fresh(1);
+    s.autofire = true;
+    s.enemies[1] = (tempest_enemy){.active = 1, .timer = 60000};
+    s.enemies[0] = foe(TEMPEST_FLIPPER, 1, TEMPEST_DEPTH);
+    s.enemies[0].rim = 1;
+    s.enemies[0].crossing = 1;
+    s.enemies[0].direction = -1;
+    s.enemies[0].timer = 176;
+    tempest_state moving = s;
+    for (unsigned i = 0; i < 6; i++)
+        tempest_step(&s, &still);
+    assert(s.phase == TEMPEST_DEATH && s.lives == 2);
+    engine_input evade = {.turn = -1};
+    for (unsigned i = 0; i < 6; i++)
+        tempest_step(&moving, &evade);
+    assert(moving.phase == TEMPEST_PLAY && moving.lives == 3);
+    /* Flat rim enemies resist inward fire; an upright flip remains shootable. */
+    s = fresh(1);
+    s.enemies[1] = (tempest_enemy){.active = 1, .timer = 60000};
+    s.enemies[0] = foe(TEMPEST_FLIPPER, 1, TEMPEST_DEPTH);
+    s.enemies[0].rim = 1;
+    s.enemies[0].crossing = 1;
+    s.enemies[0].direction = -1;
+    s.enemies[0].timer = 32;
+    s.shots[0] = (tempest_shot){TEMPEST_DEPTH, 0, 1};
+    tempest_step(&s, &still);
+    assert(s.enemies[0].active && s.score == 0);
+    s.enemies[0].timer = 112;
+    s.shots[0] = (tempest_shot){TEMPEST_DEPTH, 0, 1};
+    tempest_step(&s, &still);
+    assert(!s.enemies[0].active && s.score == 150);
+    s = fresh(11);
+    s.autofire = true;
+    s.enemies[0] = foe(TEMPEST_FUSEBALL, 1, 63000);
+    tempest_step(&s, &still);
+    assert(s.lives == 2); /* Rail touches claw's adjacent edge. */
+}
+static void stationary_replay_pressure(void) {
+    unsigned damaged = 0;
+    for (unsigned seed = 1; seed <= 64; seed++) {
+        tempest_state s;
+        tempest_init(&s, seed);
+        assert(tempest_set_stage(&s, 1));
+        for (unsigned t = 0; t < 2500 && s.stage == 1; t++) {
+            tempest_step(&s, NULL);
+            if (s.phase == TEMPEST_DEATH || s.phase == TEMPEST_OVER) {
+                damaged++;
+                break;
+            }
+        }
+    }
+    /* Natural first-wave attacks must defeat stationary autofire in most seeded
+       encounters. This is a pressure regression, not an every-seed death rule. */
+    assert(damaged >= 48);
+    tempest_state empty;
+    tempest_init(&empty, 1);
+    assert(tempest_set_stage(&empty, 1));
+    empty.spawn_timer = 60000;
+    for (unsigned t = 0; t < 1200; t++)
+        tempest_step(&empty, NULL);
+    assert(empty.phase == TEMPEST_PLAY && empty.lives == 3); /* No inactivity penalty. */
+}
 int main(void) {
+    pursuit_and_contact();
+    stationary_replay_pressure();
     engine_input in = {0};
     tempest_state s = fresh(3);
     s.enemies[0] = foe(TEMPEST_TANKER, 2, 20000);

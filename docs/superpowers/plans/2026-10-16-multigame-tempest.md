@@ -106,7 +106,17 @@ Added by the user's report that entry/attack patterns and offscreen completion
 do not match the original game. The refactor compatibility baseline above is
 complete; arcade fidelity now intentionally supersedes the old timeout behavior.
 
-- [ ] Verify entrance, center formation, repeated attacks/returns and last-two escape against original evidence.
-- [ ] Replace global-age expiry and pool-index paths with explicit bounded wave/lifecycle data.
-- [ ] Add regressions for offscreen returns, no-fire persistence, formation gating and chance-stage separation.
-- [ ] Update deterministic transition scripts and documentation, review, rebuild and reflash.
+- [x] Verify entrance, center formation, repeated attacks/returns and last-two escape against original evidence.
+- [x] Replace global-age expiry and pool-index paths with explicit bounded wave/lifecycle data.
+- [x] Add regressions for offscreen returns, no-fire persistence, formation gating and chance-stage separation.
+- [x] Update deterministic transition scripts and documentation, review, rebuild and reflash.
+
+## Task 9: Tempest transition and stationary-player corrections
+
+- [x] Reproduce duplicate incoming-web zoom and stationary autofire safety.
+- [x] Render the outgoing web in flight and grow the next web only in entry.
+- [x] Implement rim pursuit, flip contact and upright shooting vulnerability,
+  plus Fuseball rail contact; preserve the original clear rule and avoid
+  inactivity penalties.
+- [x] Review pulse/collision visual alignment, test all corrections and verify
+  the final firmware on the board.

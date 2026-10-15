@@ -26,7 +26,10 @@ static void transition_and_event_feedback(void) {
     tempest_render(&s, first);
     s.stage = 4095;
     tempest_render(&s, second);
-    assert(memcmp(first + 40 * ENGINE_WIDTH, second + 40 * ENGINE_WIDTH, 135 * ENGINE_WIDTH));
+    /* Flight contains only the receding current Fan, not a first zoom of the
+       upcoming web. Different next-web names appear below the playfield. */
+    assert(!memcmp(first + 40 * ENGINE_WIDTH, second + 40 * ENGINE_WIDTH, 135 * ENGINE_WIDTH));
+    assert(memcmp(first + 177 * ENGINE_WIDTH, second + 177 * ENGINE_WIDTH, 34 * ENGINE_WIDTH));
     assert(tempest_set_stage(&s, 20));
     s.autofire = false;
     s.enemies[0] = (tempest_enemy){
@@ -59,8 +62,41 @@ static void transition_and_event_feedback(void) {
     tempest_render(&bare, second);
     assert(memcmp(first, second, sizeof first));
 }
+static void crossing_pulse_matches_highlight(void) {
+    static uint8_t pixels[ENGINE_WIDTH * ENGINE_HEIGHT];
+    for (unsigned player_lane = 2; player_lane <= 3; player_lane++) {
+        tempest_state s;
+        tempest_init(&s, 10);
+        assert(tempest_set_stage(&s, 17));
+        s.autofire = false;
+        s.invulnerable = 0;
+        s.claw_q8 = (int32_t)player_lane * 256;
+        s.enemies[0] = (tempest_enemy){.active = 1,
+                                       .landed = 1,
+                                       .hp = 1,
+                                       .kind = TEMPEST_PULSAR,
+                                       .depth = 1000,
+                                       .lane_q8 = 512,
+                                       .direction = 1,
+                                       .crossing = 1,
+                                       .timer = 144,
+                                       .age = 125};
+        tempest_render(&s, pixels);
+        int source_x, source_y, dest_x, dest_y;
+        tempest_project(tempest_current_web(&s), 2 * 256, TEMPEST_DEPTH, &source_x, &source_y);
+        tempest_project(tempest_current_web(&s), 4 * 256, TEMPEST_DEPTH, &dest_x, &dest_y);
+        assert(pixels[(unsigned)source_y * ENGINE_WIDTH + (unsigned)source_x] == DRAW_YELLOW);
+        assert(pixels[(unsigned)dest_y * ENGINE_WIDTH + (unsigned)dest_x] != DRAW_YELLOW);
+        tempest_step(&s, NULL);
+        if (player_lane == 2)
+            assert(s.phase == TEMPEST_DEATH && s.lives == 2);
+        else
+            assert(s.phase == TEMPEST_PLAY && s.lives == 3);
+    }
+}
 int main(void) {
     transition_and_event_feedback();
+    crossing_pulse_matches_highlight();
     static uint8_t guarded[ENGINE_WIDTH * ENGINE_HEIGHT + 32];
     tempest_state s;
     tempest_init(&s, 99);

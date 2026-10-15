@@ -164,3 +164,36 @@ A reproducible transition run is seed 1234, invincible 1, autofire 0, no steerin
 after starting, game ticks 30/1086/1145/1213/1273 show entry/clear/dive/flight/next
 entry. Combat starts at 60, clears at 1080, dives at 1110, flies at 1183, enters web 2
 at 1243 and resumes combat at 1303. These are authored schedule observations.
+
+## Pursuit and collision correction
+
+The previous implementation made stationary autofire unusually safe: rim
+Flippers kept their random travel direction, both lanes were shootable for the
+entire flip, and a newly created muzzle shot could erase an enemy that already
+occupied the claw. These contradicted the manual's lethal rim flip and
+standing-up vulnerability. Fuseballs also touched only one side of the claw
+instead of both bordering rails.
+
+Rim Flippers and Pulsars now choose the shortest lane route toward the claw at
+the beginning of each flip. Open webs use direct distance and never wrap.
+Fuseballs likewise seek a claw boundary. Existing contact resolves before new
+shots, then after enemy movement. Rim flips are shootable while upright at
+progress 64-160/256; final pounces contact their destination from 192/256. Those
+window sizes are authored tuning, not measured original arcade timings. Timed
+inward shots still kill upright attackers, and steering away can evade the
+same pounce that catches a stationary firing claw. Deep Pulsar lane pulses and
+Fuseball rail contact remain independent threats. The documented clear rule
+when only rim Flippers remain is unchanged. There is no inactivity penalty.
+
+A 64-seed first-wave replay with default autofire and no movement previously
+lost a life in only 11 Circle runs; it now loses a life in 61. Open-V losses went
+from 9 to 54; stage 11 losses from 7 to 63. These are reproducible pressure checks,
+not a guarantee that standing still always dies or that spinning continuously
+is good play. The regression requires natural attacks to pressure most seeded
+Circle encounters, verifies a targeted dodge survives, and verifies an empty
+web cannot kill an idle player.
+
+During a Pulsar flip, both the highlighted rails and lethal pulse stay in the
+source lane until the flip completes. The new lane becomes electrified only
+when the enemy's discrete lane advances; a regression checks pixels and damage
+with the claw in each lane during an active mid-flip pulse.

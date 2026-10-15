@@ -72,17 +72,21 @@ Selections survive quitting and starting new games. Reboot restores defaults.
 
 ### Gyrus
 
-Gyrus includes spiral formations, inward fire, diving enemies, meteors,
+Gyrus includes destination-specific entrance formations, persistent attack/return
+flights, inward fire, diving enemies, meteors,
 satellite double fire, laser pairs, six planetary destinations, chance stages,
 extra lives, and game over. Wave clears lead into an inward shrinking-ship warp;
 planet arrivals precede chance stages, and bonus results appear before departure.
 
 The art and timings are authored for this round display. The
 [game research](docs/research/game-reference.md) and
-[transition observations](docs/research/gyruss-transitions.md) explain which
+[transition observations](docs/research/gyruss-transitions.md) and
+[wave lifecycle study](docs/research/gyruss-waves.md) explain which
 behaviors are supported by the original arcade references.
 
-![Game framebuffer captured over USB](docs/hardware/game-combat.png)
+| Neptune entry | Saturn entry |
+| --- | --- |
+| ![Neptune formation](docs/media/gyrus-neptune-formation.png) | ![Saturn formation](docs/media/gyrus-saturn-formation.png) |
 
 ### Tempest
 
@@ -224,7 +228,7 @@ python3 tools/gyrusctl.py --tcp 20400 STEP 120
 
 ### Compare device and native output
 
-This repeatable smoke test checks **36 scenarios**, comparing simulation state
+This repeatable smoke test checks **72 scenarios**, comparing simulation state
 hashes and every captured framebuffer pixel:
 
 ```sh
@@ -291,6 +295,7 @@ No TE wire is exposed, so buffering cannot guarantee synchronized panel scanout.
 <details>
 <summary>Hardware validation reports</summary>
 
+- [Gyrus wave and Tempest corrections](docs/hardware/2026-10-16-wave-and-tempest-corrections.md)
 - [Shared engine and Tempest verification](docs/hardware/2026-10-16-multigame-tempest.md)
 - [Physical tilt axes and tap-to-recenter](docs/hardware/2026-10-15-tilt-recenter.md)
 - [Settings, 3D tilt, and transition verification](docs/hardware/2026-10-15-controls-transitions.md)

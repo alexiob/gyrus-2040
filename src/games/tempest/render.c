@@ -324,8 +324,9 @@ void tempest_render(const tempest_state *s, uint8_t *p) {
         int t = s->phase_ticks;
         if (t > 60)
             t = 60;
-        scaled_web(p, w, 256 - t * 4, DRAW_BLUE, s->effects);
-        scaled_web(p, next, t * 3, DRAW_CYAN, s->effects);
+        /* Exit only recedes the current web. The next web grows exactly once
+         * during INTRO, starting at the same40/256 scale as this flight ends. */
+        scaled_web(p, w, 256 - 216 * t / 60, DRAW_BLUE, s->effects);
         travel_streaks(p, s, true);
         draw_fill(p, 40, 177, 160, 30, DRAW_BLACK);
         draw_centered(p, "SUPERZAPPER RECHARGE", 180, DRAW_YELLOW, 1);

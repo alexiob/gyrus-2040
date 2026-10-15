@@ -269,9 +269,61 @@ static void enemy_fire(tempest_state *s, const tempest_enemy *e) {
             return;
         }
 }
+/* The manual's rim attacks and seeking enemies require deliberate pursuit.
+ * Direction changes only between flips; open webs never take a wrap shortcut. */
+static int pursuit_direction(const tempest_state *s, const tempest_enemy *e) {
+    const tempest_web *w = tempest_current_web(s);
+    int from = e->lane_q8 / 256, target = (int)claw_lane(s), delta = target - from;
+    if (!delta)
+        return 0;
+    if (w->closed) {
+        int n = w->lane_count;
+        if (delta > n / 2)
+            delta -= n;
+        else if (delta < -n / 2)
+            delta += n;
+    }
+    return delta > 0 ? 1 : -1;
+}
+static bool enemy_contacts_player(const tempest_state *s, const tempest_enemy *e) {
+    if (!e->active || !e->landed)
+        return false;
+    const tempest_web *w = tempest_current_web(s);
+    int lane = e->lane_q8 / 256, player = (int)claw_lane(s);
+    int next = tempest_neighbor(w, lane, e->direction);
+    /* The electrified lane and its rendered boundary rails remain at the
+     * source until a flip completes and lane_q8 advances. */
+    if (e->kind == TEMPEST_PULSAR && e->age % 150u >= 120u && lane == player)
+        return true;
+    if (e->depth < 62000)
+        return false;
+    if (e->kind == TEMPEST_FUSEBALL) {
+        if (e->crossing)
+            return (e->direction > 0 ? lane : tempest_neighbor(w, lane, -1)) == player;
+        return lane == player || tempest_neighbor(w, lane, -1) == player;
+    }
+    if (e->crossing)
+        return (e->timer < 64 && lane == player) || (e->timer >= 192 && next == player);
+    return lane == player;
+}
+static bool player_contacts_enemies(tempest_state *s) {
+    for (unsigned i = 0; i < TEMPEST_ENEMIES; i++)
+        if (enemy_contacts_player(s, &s->enemies[i])) {
+            die(s, false);
+            if (s->phase != TEMPEST_PLAY)
+                return true;
+        }
+    return false;
+}
 static bool flip_step(tempest_state *s, tempest_enemy *e, int rate) {
     const tempest_web *w = tempest_current_web(s);
     if (!e->crossing) {
+        if (e->rim || e->kind == TEMPEST_FUSEBALL) {
+            int direction = pursuit_direction(s, e);
+            if (!direction)
+                return false;
+            e->direction = (int8_t)direction;
+        }
         int next = tempest_neighbor(w, e->lane_q8 / 256, e->direction);
         if (next < 0) {
             e->direction = (int8_t)-e->direction;
@@ -368,9 +420,7 @@ static void enemies_step(tempest_state *s) {
             enemy_fire(s, e);
         if (e->kind == TEMPEST_PULSAR && e->age % 150u == 120u)
             visual_event(s, TEMPEST_FX_PULSE, e->lane_q8 + 128, e->depth);
-        if (e->kind == TEMPEST_PULSAR && e->age % 150u >= 120u && lane == claw_lane(s))
-            die(s, false);
-        if (e->depth >= 62000 && lane == claw_lane(s))
+        if (enemy_contacts_player(s, e))
             die(s, false);
         if (s->phase != TEMPEST_PLAY)
             return;
@@ -394,11 +444,23 @@ static void shots_step(tempest_state *s) {
             unsigned lane = (unsigned)e->lane_q8 / 256;
             if (e->kind == TEMPEST_FUSEBALL && !e->crossing)
                 continue;
+            /* A rim Flipper is exposed only while standing upright mid-flip.
+             * Flat/pouncing rim enemies cannot be retroactively shot through
+             * the muzzle. A jump crosses one lane, not two full lane hitboxes. */
+            if (e->rim && (!e->crossing || e->timer < 64 || e->timer > 160))
+                continue;
             bool same = lane == b->lane;
-            if (e->crossing) {
+            if (e->kind == TEMPEST_FUSEBALL) {
+                int crossed = e->direction > 0
+                                  ? (int)lane
+                                  : tempest_neighbor(tempest_current_web(s), (int)lane, -1);
+                same = crossed == (int)b->lane;
+            } else if (e->crossing) {
                 int next = tempest_neighbor(tempest_current_web(s), (int)lane, e->direction);
-                if (next == (int)b->lane)
-                    same = true;
+                if (e->timer >= 64 && e->timer <= 160)
+                    same = same || next == (int)b->lane;
+                else if (e->timer > 160)
+                    same = next == (int)b->lane;
             }
             if (same && e->depth <= old + 1800 && e->depth >= b->depth - 1800 &&
                 e->depth > nearest) {
@@ -536,6 +598,10 @@ void tempest_step(tempest_state *s, const engine_input *input) {
     if (s->invulnerable)
         s->invulnerable--;
     move_claw(s, in);
+    /* Resolve existing contact before creating a new inward shot or Zapper.
+     * The next enemy movement is checked again after its flip advances. */
+    if (s->phase == TEMPEST_PLAY && player_contacts_enemies(s))
+        return;
     if (s->fire_cooldown)
         s->fire_cooldown--;
     if (in->fire || s->autofire)

@@ -46,3 +46,7 @@ file and probing the resulting streams and MP4 atom order.
 indexed frames expanded to PNG by the CRC-checked USB G1 capture client. They
 show independently authored launcher/vector graphics from the shared firmware.
 They contain no camera data or downloaded arcade artwork.
+
+`gyrus-neptune-formation.png` and `gyrus-saturn-formation.png` show the corrected
+paired-arc and single-file formation families, captured from the final board
+firmware with the same USB client.

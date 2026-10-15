@@ -3,6 +3,8 @@
 
 Title frames intentionally gain a Home button in the new session renderer;
 combat, transitions, pause and Settings frames must remain byte-identical.
+Use executables with equivalent gameplay rules: the deliberate wave corrections
+after commit 05e4787 are expected to differ from the original adaptation.
 """
 import argparse
 import json

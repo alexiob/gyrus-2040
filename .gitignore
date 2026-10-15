@@ -1,0 +1,8 @@
+/build*/
+/.deps/
+/tmp/
+/.DS_Store
+# Downloaded reference material stays local; provenance and indexes are tracked.
+/reference/hardware/
+/reference/game/
+/reference/software/

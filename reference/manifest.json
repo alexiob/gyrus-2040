@@ -1,0 +1,320 @@
+[
+  {
+    "path": "reference/hardware/waveshare-board.html",
+    "url": "https://www.waveshare.com/wiki/RP2040-Touch-LCD-1.28",
+    "resolved_url": "https://www.waveshare.com/wiki/RP2040-Touch-LCD-1.28",
+    "retrieved": "2026-10-15",
+    "bytes": 114838,
+    "sha256": "82ced38c1b5b6aa2e053c75a91eaed8b491c323d9cee5a62e51eed067fb12dc1",
+    "content_type": "text/html; charset=UTF-8",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/waveshare-demo.zip",
+    "url": "https://files.waveshare.com/wiki/RP2040-Touch-LCD-1.28/RP2040-Touch-LCD-Code.zip",
+    "resolved_url": "https://files.waveshare.com/wiki/RP2040-Touch-LCD-1.28/RP2040-Touch-LCD-Code.zip",
+    "retrieved": "2026-10-15",
+    "bytes": 1252046,
+    "sha256": "0c9b9c88d2ae00db0723fa7d732cb434cc5203af2e51f08c2da243e6e23a2894",
+    "content_type": "application/zip",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/waveshare-lvgl-demo.zip",
+    "url": "https://files.waveshare.com/wiki/RP2040-Touch-LCD-1.28/RP2040-Touch-LCD-1.28-LVGL.zip",
+    "resolved_url": "https://files.waveshare.com/wiki/RP2040-Touch-LCD-1.28/RP2040-Touch-LCD-1.28-LVGL.zip",
+    "retrieved": "2026-10-15",
+    "bytes": 10380044,
+    "sha256": "a31541451784f076bfb3884ed0c917f5eac948d0ba2b1358bb0332c01188a449",
+    "content_type": "application/zip",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/board-schematic.pdf",
+    "url": "https://files.waveshare.com/wiki/RP2350-Touch-LCD-1.28/RP2040-Touch-LCD-1.28.pdf",
+    "resolved_url": "https://files.waveshare.com/wiki/RP2350-Touch-LCD-1.28/RP2040-Touch-LCD-1.28.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 818638,
+    "sha256": "1d30a16e6d55ff2173436d4966ac9c8d1273854f8039576d134d1f588351538d",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/GC9A01A.pdf",
+    "url": "https://files.waveshare.com/wiki/common/GC9A01A.pdf",
+    "resolved_url": "https://files.waveshare.com/wiki/common/GC9A01A.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 5341097,
+    "sha256": "af8f6f0a03f4a340510fc06321eb78a2d9bb49670ff1f59164bd6ccf71a2bd47",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/CST816S.pdf",
+    "url": "https://files.waveshare.com/wiki/common/CST816S_Datasheet_EN.pdf",
+    "resolved_url": "https://files.waveshare.com/wiki/common/CST816S_Datasheet_EN.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 860974,
+    "sha256": "d9c644a9280c9b49ee5ccdb58be187564a244f4d5e01294a9f4ed601a8bdad7e",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/CST816S-registers.pdf",
+    "url": "https://files.waveshare.com/wiki/common/CST816S_register_declaration.pdf",
+    "resolved_url": "https://files.waveshare.com/wiki/common/CST816S_register_declaration.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 66813,
+    "sha256": "696d3517c7c21ea575f4cd63b6debc20727b74ef1b5188ecdf23bec6b5867b43",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/QMI8658A.pdf",
+    "url": "https://files.waveshare.com/wiki/common/QMI8658A_Datasheet_Rev_A.pdf",
+    "resolved_url": "https://files.waveshare.com/wiki/common/QMI8658A_Datasheet_Rev_A.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 3085534,
+    "sha256": "bc371af17cd94fca481a3b40a89417776996b7baa50dacf20e9f53d5a6a57b85",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/rp2040-datasheet.pdf",
+    "url": "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf",
+    "resolved_url": "https://pip-assets.raspberrypi.com/categories/814-rp2040/documents/RP-008371-DS-1-rp2040-datasheet.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 5301205,
+    "sha256": "be56fbb75ba0ae9e26558a73c93ac3e75c2ad4e6878d3b6703de2a76d886ea8c",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/pico-c-sdk.pdf",
+    "url": "https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf",
+    "resolved_url": "https://pip-assets.raspberrypi.com/categories/609-microcontroller-boards/documents/RP-009085-KB-4-raspberry-pi-pico-c-sdk.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 6297830,
+    "sha256": "93d3befbac8c07bfa08704437f29060ed4100cad5bd256d41a9d5fbe3f82fa31",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/hardware/hardware-design-with-rp2040.pdf",
+    "url": "https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf",
+    "resolved_url": "https://pip-assets.raspberrypi.com/categories/814-rp2040/documents/RP-008279-DS-2-hardware-design-with-rp2040.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 8853773,
+    "sha256": "51c4f430153fcdbf3209d9b3b41662c8527ff0150bc25777e3fcd6f5221a1c19",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/game/konami-service-manual.pdf",
+    "url": "https://www.arcade-museum.com/manuals-videogames/G/Gyruss__1983__Konami.pdf",
+    "resolved_url": "https://www.arcade-museum.com/manuals-videogames/G/Gyruss__1983__Konami.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1369436,
+    "sha256": "82cb191306469059d98b51dd30d08d87d74a23e3f5f62fbdf45e03d88a9fa4c9",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/game/centuri-service-manual.pdf",
+    "url": "https://www.arcade-museum.com/manuals-videogames/G/gyruss.pdf",
+    "resolved_url": "https://www.arcade-museum.com/manuals-videogames/G/gyruss.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1916921,
+    "sha256": "bb21a8e58ab59d8bb9f4854cb22b081341325c144de6e5216ada429497901e20",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/game/conversion-kit-instructions.pdf",
+    "url": "https://www.arcade-museum.com/manuals-videogames/G/GyrussConvKit.pdf",
+    "resolved_url": "https://www.arcade-museum.com/manuals-videogames/G/GyrussConvKit.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 2089678,
+    "sha256": "e7ade3def224445c74676e483d4c2d9733fa1abb763971f4598b849f73b69767",
+    "content_type": "application/pdf",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/game/screenshot-title.jpg",
+    "url": "https://www.arcade-museum.com/images-game/27/gyruss-27822.jpg",
+    "resolved_url": "https://www.arcade-museum.com/images-game/27/gyruss-27822.jpg",
+    "retrieved": "2026-10-15",
+    "bytes": 9739,
+    "sha256": "734347d2e8890626feed1b314f07e15b738649941f0ba632da23ab60fee49cdb",
+    "content_type": "image/jpeg",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/game/screenshot-gameplay.jpg",
+    "url": "https://www.arcade-museum.com/images-game/27/gyruss-27826.jpg",
+    "resolved_url": "https://www.arcade-museum.com/images-game/27/gyruss-27826.jpg",
+    "retrieved": "2026-10-15",
+    "bytes": 5061,
+    "sha256": "3696a29f5353ef297e3f4715bb91af1b143f7bb02cc86e22acc4ff0a8ef737e1",
+    "content_type": "image/jpeg",
+    "usage": "Reference only; upstream rights apply; excluded from firmware assets."
+  },
+  {
+    "path": "reference/game/flyer-front.jpg",
+    "url": "https://flyers.arcade-museum.com/videogame-flyers/0/gyruss-00456-01.jpg",
+    "resolved_url": "https://flyers.arcade-museum.com/videogame-flyers/0/gyruss-00456-01.jpg",
+    "retrieved": "2026-10-15",
+    "bytes": 168123,
+    "sha256": "6e73810b948c7532e90988a207f778cfdd163cdd5e36e7e1d492a89bea912188",
+    "content_type": "image/jpeg",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/game/flyer-back.jpg",
+    "url": "https://flyers.arcade-museum.com/videogame-flyers/0/gyruss-00456-02.jpg",
+    "resolved_url": "https://flyers.arcade-museum.com/videogame-flyers/0/gyruss-00456-02.jpg",
+    "retrieved": "2026-10-15",
+    "bytes": 354469,
+    "sha256": "e5867cd841b2df9b7ac95fbd5d326d82e03a0d62e3d36928be5470d40c21738c",
+    "content_type": "image/jpeg",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/game/screenshot-formation.jpg",
+    "url": "https://www.arcade-museum.com/images-game/27/gyruss-27824.jpg",
+    "resolved_url": "https://www.arcade-museum.com/images-game/27/gyruss-27824.jpg",
+    "retrieved": "2026-10-15",
+    "bytes": 4950,
+    "sha256": "276c62887bd5c239a199ea1dee2b2c3f894bae934c5c273dcfe42862bc75a789",
+    "content_type": "image/jpeg",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/sokol-README.md",
+    "url": "https://raw.githubusercontent.com/floooh/sokol/5e94d1291fea504ed911090338cf35bd9ef49a06/README.md",
+    "resolved_url": "https://raw.githubusercontent.com/floooh/sokol/5e94d1291fea504ed911090338cf35bd9ef49a06/README.md",
+    "retrieved": "2026-10-15",
+    "bytes": 19652,
+    "sha256": "c28ff05d67e3196fd3636187316c7ea9199af46a68b09d75d0205d0fe49cc16a",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/sokol-LICENSE",
+    "url": "https://raw.githubusercontent.com/floooh/sokol/5e94d1291fea504ed911090338cf35bd9ef49a06/LICENSE",
+    "resolved_url": "https://raw.githubusercontent.com/floooh/sokol/5e94d1291fea504ed911090338cf35bd9ef49a06/LICENSE",
+    "retrieved": "2026-10-15",
+    "bytes": 897,
+    "sha256": "72f9367756dba68918b8955092c14503934681862eee33cc16495a02f40025ef",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/sokol-dyntex-sapp.c",
+    "url": "https://raw.githubusercontent.com/floooh/sokol-samples/dff9f8c4e0a551edb641e0fa5c9613b0f4fd258d/sapp/dyntex-sapp.c",
+    "resolved_url": "https://raw.githubusercontent.com/floooh/sokol-samples/dff9f8c4e0a551edb641e0fa5c9613b0f4fd258d/sapp/dyntex-sapp.c",
+    "retrieved": "2026-10-15",
+    "bytes": 8777,
+    "sha256": "8b7954c1eb6091f4893642dc336ffcd9aa4d1d63d3eefda0a90d38f0d14a5ecd",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/sokol-samples-LICENSE",
+    "url": "https://raw.githubusercontent.com/floooh/sokol-samples/dff9f8c4e0a551edb641e0fa5c9613b0f4fd258d/LICENSE",
+    "resolved_url": "https://raw.githubusercontent.com/floooh/sokol-samples/dff9f8c4e0a551edb641e0fa5c9613b0f4fd258d/LICENSE",
+    "retrieved": "2026-10-15",
+    "bytes": 1072,
+    "sha256": "51490332d416ce2bb3a84557c7da7a1a9854c9419b6dbef251bc77d6c995e736",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/pico-sdk-README.md",
+    "url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/README.md",
+    "resolved_url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/README.md",
+    "retrieved": "2026-10-15",
+    "bytes": 9794,
+    "sha256": "bc438bc2b70ce0731f14205113d5241bb53b9a93a7eeba4cf6ecce3ced8e545f",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/pico-sdk-LICENSE.TXT",
+    "url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/LICENSE.TXT",
+    "resolved_url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/LICENSE.TXT",
+    "retrieved": "2026-10-15",
+    "bytes": 1489,
+    "sha256": "483f865953435b66c443dee7558debe3cc3cf8fcbb6a112fd9fc6a795d53f1f6",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/pico-sdk-spi.c",
+    "url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/src/rp2_common/hardware_spi/spi.c",
+    "resolved_url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/src/rp2_common/hardware_spi/spi.c",
+    "retrieved": "2026-10-15",
+    "bytes": 8245,
+    "sha256": "81d959586a9a5d9546566449e802aa266633c7531bbf6d34ccb512a94e8aea30",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/pico-sdk-spi.h",
+    "url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/src/rp2_common/hardware_spi/include/hardware/spi.h",
+    "resolved_url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/src/rp2_common/hardware_spi/include/hardware/spi.h",
+    "retrieved": "2026-10-15",
+    "bytes": 16827,
+    "sha256": "0271ec086f2194e596d8d1cf540e0f9830c4c3aab3a7c1127da09dbf0da5afe1",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/pico-spi-dma-example.c",
+    "url": "https://raw.githubusercontent.com/raspberrypi/pico-examples/0d62f75bafc2c8120d3276c3343d1a9195e909e9/spi/spi_dma/spi_dma.c",
+    "resolved_url": "https://raw.githubusercontent.com/raspberrypi/pico-examples/0d62f75bafc2c8120d3276c3343d1a9195e909e9/spi/spi_dma/spi_dma.c",
+    "retrieved": "2026-10-15",
+    "bytes": 4288,
+    "sha256": "aae48aa94017ce7d3451677e4f446f44a225d36f1ba45b098ce2731948cda238",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/pico-examples-LICENSE.TXT",
+    "url": "https://raw.githubusercontent.com/raspberrypi/pico-examples/0d62f75bafc2c8120d3276c3343d1a9195e909e9/LICENSE.TXT",
+    "resolved_url": "https://raw.githubusercontent.com/raspberrypi/pico-examples/0d62f75bafc2c8120d3276c3343d1a9195e909e9/LICENSE.TXT",
+    "retrieved": "2026-10-15",
+    "bytes": 1489,
+    "sha256": "483f865953435b66c443dee7558debe3cc3cf8fcbb6a112fd9fc6a795d53f1f6",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/mame-gyruss.cpp",
+    "url": "https://raw.githubusercontent.com/mamedev/mame/330c42d4c13a8bba675cf8b03e2e9b2c4324829e/src/mame/konami/gyruss.cpp",
+    "resolved_url": "https://raw.githubusercontent.com/mamedev/mame/330c42d4c13a8bba675cf8b03e2e9b2c4324829e/src/mame/konami/gyruss.cpp",
+    "retrieved": "2026-10-15",
+    "bytes": 35694,
+    "sha256": "c2add2800d09cd9133b636a1cb7ac1c3d71e6a78b2e902dc8616fcd93edfaaf1",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/mame-COPYING",
+    "url": "https://raw.githubusercontent.com/mamedev/mame/330c42d4c13a8bba675cf8b03e2e9b2c4324829e/COPYING",
+    "resolved_url": "https://raw.githubusercontent.com/mamedev/mame/330c42d4c13a8bba675cf8b03e2e9b2c4324829e/COPYING",
+    "retrieved": "2026-10-15",
+    "bytes": 11532,
+    "sha256": "9814ccb157fdb0a8f0fa049f858b6ac761320e90eb28f54e2972468d6d6ac0ca",
+    "content_type": "text/plain; charset=utf-8",
+    "usage": "Reference snapshot, not a build dependency. Upstream license/rights apply."
+  },
+  {
+    "path": "reference/software/pico-sdk-board.h",
+    "url": "https://raw.githubusercontent.com/raspberrypi/pico-sdk/079c6f39023649b154152db30f1d781e884879bc/src/boards/include/boards/waveshare_rp2040_touch_lcd_1.28.h",
+    "retrieved": "2026-10-15",
+    "bytes": 2370,
+    "sha256": "1bfa040d7d85fe4789395dcb9a219522649147cc214ed39b563d8121497f283d",
+    "usage": "Reference snapshot; upstream BSD-3-Clause license applies."
+  }
+]

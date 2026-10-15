@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-15",
+  "downloaded_files": 32,
+  "downloaded_bytes": 48413295,
+  "sha256_checks": 32,
+  "pdfs": [
+    [
+      "board-schematic.pdf",
+      "2"
+    ],
+    [
+      "GC9A01A.pdf",
+      "192"
+    ],
+    [
+      "CST816S.pdf",
+      "10"
+    ],
+    [
+      "CST816S-registers.pdf",
+      "5"
+    ],
+    [
+      "QMI8658A.pdf",
+      "88"
+    ],
+    [
+      "rp2040-datasheet.pdf",
+      "642"
+    ],
+    [
+      "pico-c-sdk.pdf",
+      "828"
+    ],
+    [
+      "hardware-design-with-rp2040.pdf",
+      "35"
+    ],
+    [
+      "konami-service-manual.pdf",
+      "32"
+    ],
+    [
+      "centuri-service-manual.pdf",
+      "27"
+    ],
+    [
+      "conversion-kit-instructions.pdf",
+      "5"
+    ]
+  ],
+  "zip_crc_checks": [
+    [
+      "waveshare-demo.zip",
+      80
+    ],
+    [
+      "waveshare-lvgl-demo.zip",
+      712
+    ]
+  ],
+  "jpeg_checks": 5,
+  "local_links_checked": 35,
+  "memory_and_wire_calculations": "passed",
+  "errors": [],
+  "runtime_builds": "not implemented or run",
+  "hardware_checks": "not connected or measured"
+}

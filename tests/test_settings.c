@@ -51,6 +51,25 @@ static void pause_actions(void) {
     game_step(&g, &(game_input){.pause = true});
     assert(!g.pause_settings && g.phase == GAME_INTRO);
 }
+static void title_settings(void) {
+    for (unsigned over = 0; over < 2; ++over) {
+        game_state g;
+        game_init(&g, 42);
+        g.phase = over ? GAME_OVER : GAME_TITLE;
+        const game_phase parent = g.phase;
+        game_step(&g, &(game_input){.menu_action = GAME_MENU_SETTINGS});
+        assert(g.pause_settings && g.phase == parent);
+        const uint32_t tick = g.tick;
+        game_step(&g, &(game_input){.menu_action = GAME_MENU_FIRE_UP});
+        game_step(&g, &(game_input){.start = true});
+        assert(g.phase == parent && g.pause_settings && g.tick == tick);
+        assert(g.settings.fire_rate == 6);
+        game_step(&g, &(game_input){.menu_action = GAME_MENU_BACK});
+        assert(!g.pause_settings && g.phase == parent);
+        game_step(&g, &(game_input){.start = true});
+        assert(g.phase == GAME_INTRO && g.settings.fire_rate == 6);
+    }
+}
 static void exact_fire_cadence(void) {
     for (int32_t rate = 1; rate <= 10; ++rate) {
         game_state g;
@@ -103,7 +122,7 @@ static void touch_pause_flow(void) {
     controls_init(&controls);
     controls_sample sample = {0};
     (void)controls_update(&controls, sample, CONTROLS_PAUSE);
-    sample = (controls_sample){.now_ms = 10, .touch_pressed = true, .touch_x = 120, .touch_y = 140};
+    sample = (controls_sample){.now_ms = 10, .touch_pressed = true, .touch_x = 120, .touch_y = 127};
     (void)controls_update(&controls, sample, CONTROLS_PAUSE);
     sample.now_ms = 30;
     sample.touch_pressed = false;
@@ -112,7 +131,7 @@ static void touch_pause_flow(void) {
     assert(g.pause_settings);
     sample.now_ms = 40;
     (void)controls_update(&controls, sample, CONTROLS_SETTINGS);
-    sample = (controls_sample){.now_ms = 50, .touch_pressed = true, .touch_x = 180, .touch_y = 90};
+    sample = (controls_sample){.now_ms = 50, .touch_pressed = true, .touch_x = 180, .touch_y = 107};
     (void)controls_update(&controls, sample, CONTROLS_SETTINGS);
     sample.now_ms = 70;
     sample.touch_pressed = false;
@@ -135,6 +154,7 @@ static void idle_enemy_tick_still_collides(void) {
 int main(void) {
     defaults_bounds_and_preservation();
     pause_actions();
+    title_settings();
     exact_fire_cadence();
     live_enemy_speed();
     touch_pause_flow();

@@ -16,15 +16,13 @@ controls_target controls_hit_test(controls_screen screen, uint16_t x, uint16_t y
         if (in_rect(x, y, CONTROLS_START_X0, CONTROLS_START_X1, CONTROLS_START_Y0,
                     CONTROLS_START_Y1))
             return CONTROLS_TARGET_START;
-        if (in_rect(x, y, CONTROLS_MODE_X0, CONTROLS_MODE_X1, CONTROLS_MODE_Y0, CONTROLS_MODE_Y1))
-            return CONTROLS_TARGET_MODE;
+        if (in_rect(x, y, CONTROLS_TITLE_SETTINGS_X0, CONTROLS_TITLE_SETTINGS_X1,
+                    CONTROLS_TITLE_SETTINGS_Y0, CONTROLS_TITLE_SETTINGS_Y1))
+            return CONTROLS_TARGET_SETTINGS;
     } else if (screen == CONTROLS_PAUSE) {
         if (in_rect(x, y, CONTROLS_RESUME_X0, CONTROLS_RESUME_X1, CONTROLS_RESUME_Y0,
                     CONTROLS_RESUME_Y1))
             return CONTROLS_TARGET_PAUSE;
-        if (in_rect(x, y, CONTROLS_PAUSE_MODE_X0, CONTROLS_PAUSE_MODE_X1, CONTROLS_PAUSE_MODE_Y0,
-                    CONTROLS_PAUSE_MODE_Y1))
-            return CONTROLS_TARGET_MODE;
         if (in_rect(x, y, CONTROLS_SETTINGS_X0, CONTROLS_SETTINGS_X1, CONTROLS_SETTINGS_Y0,
                     CONTROLS_SETTINGS_Y1))
             return CONTROLS_TARGET_SETTINGS;
@@ -34,6 +32,9 @@ controls_target controls_hit_test(controls_screen screen, uint16_t x, uint16_t y
                     CONTROLS_REBOOT_Y1))
             return CONTROLS_TARGET_REBOOT;
     } else if (screen == CONTROLS_SETTINGS) {
+        if (in_rect(x, y, CONTROLS_SETTINGS_MODE_X0, CONTROLS_SETTINGS_MODE_X1,
+                    CONTROLS_SETTINGS_MODE_Y0, CONTROLS_SETTINGS_MODE_Y1))
+            return CONTROLS_TARGET_MODE;
         static const struct {
             uint16_t x0, x1, y0, y1;
             controls_target target;
@@ -135,13 +136,18 @@ void controls_tilt_reset(controls_state *state) {
     state->tilt_have_sample = false;
     state->tilt_calibrating = false;
     state->tilt_calibration_count = 0;
-    state->tilt_angle_sum = 0;
-    state->tilt_gyro_sum = 0;
+    memset(state->tilt_accel_sum, 0, sizeof state->tilt_accel_sum);
+    memset(state->tilt_gyro_sum, 0, sizeof state->tilt_gyro_sum);
+    memset(state->tilt_gyro_bias, 0, sizeof state->tilt_gyro_bias);
+    state->tilt_preview_value = 0;
     state->tilt_filtered = 0;
 }
 bool controls_tilt_ready(const controls_state *state) {
     return state != NULL && state->mode == CONTROLS_TILT && state->tilt_ready &&
            state->tilt_available;
+}
+int16_t controls_tilt_preview(const controls_state *state) {
+    return controls_tilt_ready(state) ? state->tilt_preview_value : 0;
 }
 uint16_t controls_tilt_progress(const controls_state *state, uint32_t now_ms) {
     if (state == NULL || state->mode != CONTROLS_TILT || !state->tilt_available)
@@ -153,98 +159,168 @@ uint16_t controls_tilt_progress(const controls_state *state, uint32_t now_ms) {
     uint32_t elapsed = now_ms - state->tilt_calibration_started;
     return elapsed >= CONTROLS_TILT_CALIBRATE_MS ? 1000u : (uint16_t)(elapsed * 2u);
 }
+/* Integer square root, rounded to the nearest integer. Calibration only. */
+static uint32_t vector_length(const int32_t vector[3]) {
+    uint32_t original = 0;
+    for (unsigned i = 0; i < 3u; ++i)
+        original += (uint32_t)(vector[i] * vector[i]);
+    uint32_t value = original, result = 0, bit = 1u << 30u;
+    while (bit > value)
+        bit >>= 2u;
+    while (bit != 0u) {
+        if (value >= result + bit) {
+            value -= result + bit;
+            result = (result >> 1u) + bit;
+        } else
+            result >>= 1u;
+        bit >>= 2u;
+    }
+    if (original - result * result > result)
+        ++result;
+    return result;
+}
+static bool normalize_vector(const int32_t input[3], int32_t output[3]) {
+    uint32_t length = vector_length(input);
+    if (length == 0u)
+        return false;
+    for (unsigned i = 0; i < 3u; ++i)
+        output[i] = input[i] * 16384 / (int32_t)length;
+    return true;
+}
+static bool build_tilt_basis(controls_state *state) {
+    int32_t neutral[3], right[3];
+    for (unsigned i = 0; i < 3u; ++i) {
+        neutral[i] = state->tilt_accel_sum[i] / state->tilt_calibration_count;
+        state->tilt_gyro_bias[i] = state->tilt_gyro_sum[i] / state->tilt_calibration_count;
+    }
+    if (!normalize_vector(neutral, state->tilt_gravity))
+        return false;
+    /* Project screen-right onto the gravity tangent plane. This is a defined
+     * left/right bank for flat, inclined, and upright screens. Only a board
+     * standing almost exactly on its side needs screen-Y as a fallback. */
+    unsigned reference = 0;
+    for (unsigned attempt = 0; attempt < 2u; ++attempt) {
+        for (unsigned i = 0; i < 3u; ++i)
+            right[i] = (i == reference ? 16384 : 0) -
+                       state->tilt_gravity[i] * state->tilt_gravity[reference] / 16384;
+        if (vector_length(right) >= 2048u)
+            break;
+        reference = 1;
+    }
+    if (!normalize_vector(right, state->tilt_right))
+        return false;
+    for (unsigned i = 0; i < 3u; ++i) {
+        unsigned j = (i + 1u) % 3u, k = (i + 2u) % 3u;
+        state->tilt_axis[i] = (state->tilt_gravity[j] * state->tilt_right[k] -
+                               state->tilt_gravity[k] * state->tilt_right[j]) /
+                              16384;
+    }
+    state->tilt_angle = 0;
+    state->tilt_filtered = 0;
+    return true;
+}
+static int32_t project_gravity(const int32_t vector[3], const int32_t axis[3]) {
+    int32_t projection = 0;
+    for (unsigned i = 0; i < 3u; ++i)
+        projection += vector[i] * axis[i];
+    return projection / 16384;
+}
 static int16_t tilt_input(controls_state *state, const controls_sample *sample) {
     if (state->tilt_have_sample && sample->now_ms - state->tilt_last_ms > CONTROLS_MOTION_STALE_MS)
         controls_tilt_reset(state);
-    const controls_motion *m = &sample->motion;
+    const controls_motion *motion = &sample->motion;
     bool fresh = sample->motion_valid &&
-                 sample->now_ms - m->sampled_ms <= CONTROLS_MOTION_STALE_MS &&
-                 (!state->tilt_have_sample || m->sampled_ms != state->tilt_last_ms);
+                 sample->now_ms - motion->sampled_ms <= CONTROLS_MOTION_STALE_MS &&
+                 (!state->tilt_have_sample || motion->sampled_ms != state->tilt_last_ms);
     if (fresh) {
         if (state->tilt_have_sample &&
-            m->sampled_ms - state->tilt_last_ms > CONTROLS_MOTION_STALE_MS)
+            motion->sampled_ms - state->tilt_last_ms > CONTROLS_MOTION_STALE_MS)
             controls_tilt_reset(state);
+        int32_t norm = 0;
         for (unsigned i = 0; i < 3u; ++i) {
-            if (m->accel_mg[i] < -4000 || m->accel_mg[i] > 4000 || m->gyro_mdps[i] < -512000 ||
-                m->gyro_mdps[i] > 512000) {
+            if (motion->accel_mg[i] < -4000 || motion->accel_mg[i] > 4000 ||
+                motion->gyro_mdps[i] < -512000 || motion->gyro_mdps[i] > 512000) {
                 controls_tilt_reset(state);
                 return 0;
             }
+            norm += motion->accel_mg[i] * motion->accel_mg[i];
         }
-        int32_t x = m->accel_mg[0], y = m->accel_mg[1], z = m->accel_mg[2];
-        int32_t norm = x * x + y * y + z * z;
-        /* Reject shocks/freefall and an unusable near-zero X/Z projection. */
-        if (norm < 700 * 700 || norm > 1300 * 1300 || x * x + z * z < 250 * 250) {
+        if (norm < 700 * 700 || norm > 1300 * 1300) {
             controls_tilt_reset(state);
             return 0;
         }
-        uint16_t angle = gravity_angle(x, z);
-        uint32_t dt = state->tilt_have_sample ? m->sampled_ms - state->tilt_last_ms : 0u;
+        uint32_t dt = state->tilt_have_sample ? motion->sampled_ms - state->tilt_last_ms : 0u;
         state->tilt_have_sample = true;
         state->tilt_available = true;
-        state->tilt_last_ms = m->sampled_ms;
+        state->tilt_last_ms = motion->sampled_ms;
         if (!state->tilt_ready) {
-            /* QST allows up to10dps initial zero-rate offset. Permit15dps
-             * here, then learn the Y bias; the two-degree gravity-pose check
-             * independently rejects actual movement during calibration. */
             bool stationary = true;
-            for (unsigned i = 0; i < 3u; ++i)
-                if (m->gyro_mdps[i] < -15000 || m->gyro_mdps[i] > 15000)
+            int32_t pose_change = 0;
+            for (unsigned i = 0; i < 3u; ++i) {
+                if (motion->gyro_mdps[i] < -15000 || motion->gyro_mdps[i] > 15000)
                     stationary = false;
-            /* Also detect a slow pose change that a biased gyro might miss. */
-            int32_t pose_change =
-                state->tilt_calibrating ? angle_difference(angle, state->tilt_reference) : 0;
-            if (!stationary || pose_change < -364 || pose_change > 364) {
+                int32_t difference =
+                    state->tilt_calibrating
+                        ? motion->accel_mg[i] - state->tilt_calibration_reference[i]
+                        : 0;
+                pose_change += difference * difference;
+            }
+            /* A 35mg gravity-vector change is approximately two degrees.
+             * The gyro threshold accommodates the specified initial bias. */
+            if (!stationary || pose_change > 35 * 35) {
                 state->tilt_calibrating = false;
                 state->tilt_calibration_count = 0;
-                state->tilt_angle_sum = 0;
-                state->tilt_gyro_sum = 0;
                 return 0;
             }
             if (!state->tilt_calibrating) {
                 state->tilt_calibrating = true;
-                state->tilt_calibration_started = m->sampled_ms;
-                state->tilt_reference = angle;
-                state->tilt_angle_sum = 0;
-                state->tilt_gyro_sum = 0;
+                state->tilt_calibration_started = motion->sampled_ms;
                 state->tilt_calibration_count = 0;
+                for (unsigned i = 0; i < 3u; ++i) {
+                    state->tilt_calibration_reference[i] = motion->accel_mg[i];
+                    state->tilt_accel_sum[i] = 0;
+                    state->tilt_gyro_sum[i] = 0;
+                }
             }
             if (state->tilt_calibration_count < 128u) {
-                state->tilt_angle_sum += angle_difference(angle, state->tilt_reference);
-                state->tilt_gyro_sum += m->gyro_mdps[1];
+                for (unsigned i = 0; i < 3u; ++i) {
+                    state->tilt_accel_sum[i] += motion->accel_mg[i];
+                    state->tilt_gyro_sum[i] += motion->gyro_mdps[i];
+                }
                 ++state->tilt_calibration_count;
             }
-            if (m->sampled_ms - state->tilt_calibration_started >= CONTROLS_TILT_CALIBRATE_MS &&
-                state->tilt_calibration_count >= 20u) {
-                state->tilt_neutral =
-                    (uint16_t)((int32_t)state->tilt_reference +
-                               state->tilt_angle_sum / state->tilt_calibration_count);
-                state->tilt_angle = state->tilt_neutral;
-                state->tilt_gyro_bias = state->tilt_gyro_sum / state->tilt_calibration_count;
-                state->tilt_filtered = 0;
-                state->tilt_ready = true;
-            }
+            if (motion->sampled_ms - state->tilt_calibration_started >=
+                    CONTROLS_TILT_CALIBRATE_MS &&
+                state->tilt_calibration_count >= 20u)
+                state->tilt_ready = build_tilt_basis(state);
             return 0;
         }
-        /* Positive body-Y angular velocity decreases the gravity roll angle.
-         * 5493 converts (millidegrees/second * milliseconds) to turn units.
-         * Acceleration corrects drift by 1/16 per fresh sample; a 1/4 low-pass
-         * on relative bank removes jitter before the proportional speed map. */
-        int32_t predicted =
-            state->tilt_angle - (m->gyro_mdps[1] - state->tilt_gyro_bias) * (int32_t)dt / 5493;
+        int32_t right = project_gravity(motion->accel_mg, state->tilt_right);
+        int32_t neutral = project_gravity(motion->accel_mg, state->tilt_gravity);
+        if (right * right + neutral * neutral < 250 * 250) {
+            controls_tilt_reset(state);
+            return 0;
+        }
+        uint16_t angle = gravity_angle(right, neutral);
+        int64_t gyro_projection = 0;
+        for (unsigned i = 0; i < 3u; ++i)
+            gyro_projection +=
+                (int64_t)(motion->gyro_mdps[i] - state->tilt_gyro_bias[i]) * state->tilt_axis[i];
+        int32_t gyro = (int32_t)(gyro_projection / 16384);
+        /* With K=NcrossR, body rotation about K changes gravity bank by -gyro.
+         * Only this dot product needs int64; gyro*dt remains within int32. */
+        int32_t predicted = state->tilt_angle - gyro * (int32_t)dt / 5493;
         state->tilt_angle =
             (uint16_t)(predicted + angle_difference(angle, (uint16_t)predicted) / 16);
-        int32_t relative =
-            angle_difference((uint16_t)state->tilt_angle, (uint16_t)state->tilt_neutral);
+        int32_t relative = angle_difference((uint16_t)state->tilt_angle, 0);
         state->tilt_filtered += (relative - state->tilt_filtered) / 4;
     }
     if (!state->tilt_ready || !state->tilt_available)
         return 0;
-    int32_t bank = state->tilt_filtered;
-    int32_t amount = bank < 0 ? -bank : bank;
+    int32_t bank = state->tilt_filtered, amount = bank < 0 ? -bank : bank;
     if (amount <= 546)
-        return 0; /* Three degrees around calibrated neutral. */
-    int32_t speed = (amount - 546) * 900 / (4551 - 546); /* Full rate near 25 degrees. */
+        return 0;
+    int32_t speed = (amount - 546) * 900 / (4551 - 546);
     uint32_t sensitivity = sample->tilt_sensitivity_percent;
     if (sensitivity == 0u)
         sensitivity = 100u;
@@ -285,8 +361,6 @@ controls_output controls_update(controls_state *state, controls_sample sample,
     if (screen_changed) {
         state->screen = screen;
         state->screen_valid = true;
-        if (state->mode == CONTROLS_TILT)
-            controls_tilt_reset(state);
         state->touch_down = sample.touch_pressed;
         state->touch_cancelled = sample.touch_pressed;
         state->touch_target = CONTROLS_TARGET_NONE;
@@ -297,14 +371,20 @@ controls_output controls_update(controls_state *state, controls_sample sample,
         if (screen == CONTROLS_PLAY)
             out.input.fire = state->fire_stable;
         else if (fire_rise) {
-            if (screen == CONTROLS_PAUSE || screen == CONTROLS_SETTINGS)
+            if (screen == CONTROLS_SETTINGS)
+                out.input.menu_action = GAME_MENU_BACK;
+            else if (screen == CONTROLS_PAUSE)
                 out.input.pause = true;
             else
                 out.input.start = true;
         }
     }
-    if (state->mode == CONTROLS_TILT && screen == CONTROLS_PLAY)
-        out.input.angle_delta = tilt_input(state, &sample);
+    if (state->mode == CONTROLS_TILT) {
+        int16_t steering = tilt_input(state, &sample);
+        state->tilt_preview_value = (int16_t)((int32_t)steering * 1000 / 900);
+        if (screen == CONTROLS_PLAY)
+            out.input.angle_delta = steering;
+    }
     bool invalid = sample.touch_invalid || state->touch_ignore_sample ||
                    (sample.touch_pressed && (sample.touch_x >= 240u || sample.touch_y >= 240u));
     state->touch_ignore_sample = false;

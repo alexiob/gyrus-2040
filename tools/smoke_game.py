@@ -45,6 +45,8 @@ def run():
             peer.request('SET control_mode 0')
         cases = [
             ('title', []),
+            ('title-settings', ['INPUT menu=1', 'STEP 1']),
+            ('title-settings-back', ['INPUT menu=2', 'STEP 1']),
             ('intro', ['INPUT start=1', 'STEP 1']),
             ('combat', ['INPUT fire=1 turn=1', 'STEP 600']),
             ('chance', ['LEVEL 3', 'INPUT turn=-1', 'STEP 300']),
@@ -59,6 +61,29 @@ def run():
             ('settings-back', ['INPUT menu=2', 'STEP 1']),
             ('settings-resumed', ['INPUT pause=1', 'STEP 120']),
         ]
+        # Fixed-seed, no-fire formations finish after known simulation calls.
+        # Check the phase too: matching pixels alone could compare two wrong paths.
+        expected_phases = {}
+        for stage, finish in ((1, 1350), (2, 1350), (3, 614), (22, 1350)):
+            prefix = f'transition-{stage}'
+            setup = ['RESET 2040', 'SET control_mode 0', 'SET invincible 1',
+                     'SET autofire 0', f'LEVEL {stage}', f'STEP {finish}']
+            cases.append((prefix + '-clear', setup))
+            expected_phases[prefix + '-clear'] = 'clear'
+            clear_ticks = 120 if stage == 3 else 30
+            cases.append((prefix + '-warp-start', [f'STEP {clear_ticks}']))
+            cases.append((prefix + '-warp-mid', ['STEP 45']))
+            expected_phases[prefix + '-warp-start'] = 'warp'
+            expected_phases[prefix + '-warp-mid'] = 'warp'
+            if stage in (2, 22):
+                cases.append((prefix + '-arrival-start', ['STEP 45']))
+                cases.append((prefix + '-arrival-mid', ['STEP 60']))
+                cases.append((prefix + '-next', ['STEP 60']))
+                expected_phases[prefix + '-arrival-start'] = 'arrival'
+                expected_phases[prefix + '-arrival-mid'] = 'arrival'
+            else:
+                cases.append((prefix + '-next', ['STEP 45']))
+            expected_phases[prefix + '-next'] = 'intro'
         for label, commands in cases:
             for command in commands:
                 for peer in (device, native):
@@ -66,6 +91,8 @@ def run():
             ds = device.request('STATE')[0]['state']
             ns = native.request('STATE')[0]['state']
             assert ds['hash'] == ns['hash'], (label, ds, ns)
+            if label in expected_phases:
+                assert ds['phase'] == expected_phases[label], (label, ds)
             df, dpng = device.request('FRAME')
             nf, npng = native.request('FRAME')
             assert dpng == npng, f'{label}: device/native pixels differ'

@@ -7,15 +7,22 @@ inward fire, diving enemies, meteors, satellite double fire, laser pairs,
 six planetary destinations, chance stages, extra lives and game over.
 
 **Autofire is ON by default at five volleys per second.** Touch START, steer, and tap the centre to pause.
-Select LEFT / RIGHT, BORDER DRAG, or TILT on the title/pause screen.
+Open **Settings** on the title or pause menu to select LEFT / RIGHT, BORDER DRAG, or TILT.
 Split touch is inverted: left turns clockwise, right counterclockwise. Tilt
-calibrates after holding still for half a second at start/resume. The pause menu
+calibrates after holding still for half a second in a comfortable pose, including upright.
+Settings shows calibration progress and a live steering indicator. A fresh calibration
+survives starting/resuming a game. The pause menu
 has separate Quit and Reboot actions; Reboot needs a continuous five-second hold.
-Open **Pause → Settings** to adjust fire rate (1–10 volleys/s), enemy speed
+Open **Settings** to adjust fire rate (1–10 volleys/s), enemy speed
 (25–200%), and tilt sensitivity (50–200%) with touch −/+ buttons. Values remain
 selected across new games until reboot; defaults are 5/s, 100%, 100%.
 Physical RESET always resets the chip immediately. BOOT can start/resume, and
-can fire when autofire is disabled for debugging.
+can fire when autofire is disabled for debugging. In Settings, BOOT returns Back.
+
+Wave clears lead into an inward shrinking-ship warp. The last warp approaches
+a centered planet, followed by a chance stage; chance results show the hit bonus
+before travel resumes. These sequences follow observed arcade behavior with
+authored timings for the round display. See [transition research](docs/research/gyruss-transitions.md).
 
 ![Device framebuffer captured over USB](docs/hardware/game-combat.png)
 
@@ -112,7 +119,8 @@ The QMI8658A uses synchronized shadow-register reads for coherent 6-axis samples
 No TE wire is exposed; buffering cannot guarantee synchronized panel scanout.
 
 - [Game implementation and validation](docs/hardware/2026-10-15-game.md)
-- [On-device settings and verification](docs/hardware/2026-10-15-settings.md)
+- [Settings, 3D tilt, and transition verification](docs/hardware/2026-10-15-controls-transitions.md)
+- [Earlier on-device settings verification](docs/hardware/2026-10-15-settings.md)
 - [Controls and IMU details](docs/controls.md)
 - [Gameplay/scoring](docs/gameplay.md)
 - [Original assets and deterministic generator](docs/assets.md)

@@ -11,6 +11,10 @@
 #define GAME_PARTICLES 24u
 #define GAME_STARS 64u
 #define GAME_TICK_HZ 60u
+#define GAME_CLEAR_TICKS 30u
+#define GAME_CHANCE_RESULT_TICKS 120u
+#define GAME_WARP_TICKS 90u
+#define GAME_ARRIVAL_TICKS 120u
 /* Angle0=up, 16384=right. Positive turn is clockwise. Radii use Q8.8 pixels. */
 typedef enum {
     GAME_TITLE,
@@ -19,7 +23,9 @@ typedef enum {
     GAME_CHANCE,
     GAME_ARRIVAL,
     GAME_PAUSED,
-    GAME_OVER
+    GAME_OVER,
+    GAME_CLEAR,
+    GAME_WARP
 } game_phase;
 typedef enum {
     GAME_MENU_NONE,
@@ -81,8 +87,12 @@ typedef struct game_state {
     game_settings settings;
     uint8_t fire_rate_remainder, enemy_time_remainder;
     uint16_t enemy_ticks;
-    bool pause_settings; /* Settings page; gates menu actions. */
-    bool tilt_ready;     /* UI only; excluded from simulation hash. */
+    bool pause_settings;       /* Settings page in Title/Over/Paused; gates menu actions. */
+    bool clear_chance;         /* Current clear sequence is a chance-stage result. */
+    uint32_t transition_bonus; /* Awarded once when the chance result begins. */
+    bool tilt_ready;           /* UI only; excluded from simulation hash. */
+    uint16_t tilt_progress;    /* Calibration0..1000, UI only. */
+    int16_t tilt_preview;      /* Steering-1000..1000, UI only. */
     game_enemy enemies[GAME_ENEMIES];
     game_shot shots[GAME_SHOTS], hostile[GAME_HOSTILE_SHOTS];
     game_particle particles[GAME_PARTICLES];

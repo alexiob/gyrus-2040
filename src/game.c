@@ -35,9 +35,9 @@ const char *game_planet_name(unsigned p) {
     return names[p % 6u];
 }
 const char *game_phase_name(game_phase p) {
-    static const char *const names[] = {"title",   "intro",  "play",     "chance",
-                                        "arrival", "paused", "game_over"};
-    return (unsigned)p < 7u ? names[p] : "invalid";
+    static const char *const names[] = {"title",  "intro",     "play",  "chance", "arrival",
+                                        "paused", "game_over", "clear", "warp"};
+    return (unsigned)p < 9u ? names[p] : "invalid";
 }
 static void clear_entities(game_state *g) {
     memset(g->enemies, 0, sizeof g->enemies);
@@ -79,6 +79,9 @@ bool game_set_stage(game_state *g, unsigned stage) {
     }
     g->phase = GAME_INTRO;
     g->phase_ticks = 0;
+    g->pause_settings = false;
+    g->clear_chance = false;
+    g->transition_bonus = 0;
     g->spawned = 0;
     g->destroyed = 0;
     g->escaped = 0;
@@ -257,9 +260,11 @@ static void kill_enemy(game_state *g, game_enemy *e) {
         score_add(g, e->kind == 5u ? 200u : 500u);
 }
 static void update_stars_particles(game_state *g) {
+    unsigned star_speed = g->phase == GAME_WARP ? 1u + 7u * g->phase_ticks / GAME_WARP_TICKS
+                                                : (g->phase == GAME_ARRIVAL ? 4u : 1u);
     for (unsigned i = 0; i < GAME_STARS; ++i) {
         game_star *s = &g->stars[i];
-        s->radius = (uint16_t)(s->radius + 32u + (uint16_t)s->speed * 20u);
+        s->radius = (uint16_t)(s->radius + (32u + (unsigned)s->speed * 20u) * star_speed);
         if (s->radius > 122u * 256u) {
             s->radius = 4u * 256u;
             s->angle = (uint16_t)random_word(g);
@@ -443,6 +448,7 @@ static void spawns(game_state *g) {
 }
 static void next_stage(game_state *g) {
     (void)game_set_stage(g, g->stage >= 4095u ? 24u : (unsigned)g->stage + 1u);
+    g->ship_angle = 32768;
 }
 void game_step(game_state *g, const game_input *input) {
     const game_input zero = {0};
@@ -453,6 +459,12 @@ void game_step(game_state *g, const game_input *input) {
         g->phase_ticks = 0;
         clear_entities(g);
         return;
+    }
+    if (g->phase == GAME_TITLE || g->phase == GAME_OVER) {
+        if (g->pause_settings || in->menu_action == GAME_MENU_SETTINGS) {
+            pause_action(g, in->menu_action);
+            return;
+        }
     }
     if (in->start && (g->phase == GAME_TITLE || g->phase == GAME_OVER)) {
         game_start(g);
@@ -477,6 +489,29 @@ void game_step(game_state *g, const game_input *input) {
     update_stars_particles(g);
     if (g->phase == GAME_TITLE || g->phase == GAME_OVER)
         return;
+    if (g->phase == GAME_CLEAR) {
+        const unsigned duration = g->clear_chance ? GAME_CHANCE_RESULT_TICKS : GAME_CLEAR_TICKS;
+        if (g->phase_ticks >= duration) {
+            g->phase = GAME_WARP;
+            g->phase_ticks = 0;
+        }
+        return;
+    }
+    if (g->phase == GAME_WARP) {
+        if (g->phase_ticks >= GAME_WARP_TICKS) {
+            if (!g->clear_chance && g->warp == 1u) {
+                g->phase = GAME_ARRIVAL;
+                g->phase_ticks = 0;
+            } else
+                next_stage(g);
+        }
+        return;
+    }
+    if (g->phase == GAME_ARRIVAL) {
+        if (g->phase_ticks >= GAME_ARRIVAL_TICKS)
+            next_stage(g);
+        return;
+    }
     g->ship_angle = add_angle(g->ship_angle, (int32_t)in->turn * 600 + in->angle_delta);
     if (g->invulnerable > 0u)
         --g->invulnerable;
@@ -485,11 +520,6 @@ void game_step(game_state *g, const game_input *input) {
             g->phase = g->warp == 0u ? GAME_CHANCE : GAME_PLAY;
             g->phase_ticks = 0;
         }
-        return;
-    }
-    if (g->phase == GAME_ARRIVAL) {
-        if (g->phase_ticks >= 90u)
-            next_stage(g);
         return;
     }
     if (g->fire_cooldown > 0u)
@@ -536,15 +566,16 @@ void game_step(game_state *g, const game_input *input) {
             break;
         }
     if (g->spawned >= g->stage_target && !any) {
-        if (g->phase == GAME_CHANCE) {
-            score_add(g, g->destroyed == g->stage_target ? 10000u : (uint32_t)g->destroyed * 100u);
-            next_stage(g);
-        } else if (g->warp == 1u) {
-            g->phase = GAME_ARRIVAL;
-            g->phase_ticks = 0;
-            clear_entities(g);
-        } else
-            next_stage(g);
+        g->clear_chance = g->phase == GAME_CHANCE;
+        g->transition_bonus =
+            g->clear_chance
+                ? (g->destroyed == g->stage_target ? 10000u : (uint32_t)g->destroyed * 100u)
+                : 0u;
+        if (g->clear_chance)
+            score_add(g, g->transition_bonus);
+        g->phase = GAME_CLEAR;
+        g->phase_ticks = 0;
+        clear_entities(g);
     }
 }
 static void hash_word(uint32_t *hash, uint32_t word) {
@@ -579,6 +610,8 @@ uint32_t game_state_hash(const game_state *g) {
     H(g->invincible);
     H(g->autofire);
     H(g->pause_settings);
+    H(g->clear_chance);
+    H(g->transition_bonus);
     H(g->settings.fire_rate);
     H(g->settings.enemy_speed_percent);
     H(g->settings.tilt_sensitivity_percent);

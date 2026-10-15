@@ -22,17 +22,19 @@ static bool state(void *ctx, char *out, size_t cap) {
         out, cap,
         "{\"tick\":%" PRIu32 ",\"rng\":%" PRIu32 ",\"score\":%" PRIu32 ",\"high_score\":%" PRIu32
         ",\"lives\":%u,\"stage\":%u,\"planet\":%u,\"warp\":%u,\"double_fire\":%u,\"phase\":\"%s\","
-        "\"ship_angle\":%u,"
+        "\"ship_angle\":%u,\"phase_ticks\":%u,"
         "\"invincible\":%s,\"autofire\":%s,\"frozen\":%s,\"control_mode\":%u,\"reboot_progress\":%"
         "u,\"tilt_ready\":%s,\"enemies\":%u,\"shots\":%u,\"hostile_shots\":%u,\"hash\":%" PRIu32
-        ",\"pause_settings\":%s,\"fire_rate\":%u,\"enemy_speed\":%u,\"tilt_sensitivity\":%u}",
+        ",\"pause_settings\":%s,\"fire_rate\":%u,\"enemy_speed\":%u,\"tilt_sensitivity\":%u,\"tilt_"
+        "progress\":%u,\"tilt_preview\":%d}",
         s->tick, s->rng, s->score, s->high_score, (unsigned)s->lives, (unsigned)s->stage,
         (unsigned)s->planet, (unsigned)s->warp, (unsigned)s->double_fire, game_phase_name(s->phase),
-        (unsigned)s->ship_angle, s->invincible ? "true" : "false", s->autofire ? "true" : "false",
-        a->frozen ? "true" : "false", (unsigned)s->control_mode, (unsigned)s->reboot_progress,
-        s->tilt_ready ? "true" : "false", enemies, shots, hostile, game_state_hash(s),
-        s->pause_settings ? "true" : "false", (unsigned)s->settings.fire_rate,
-        (unsigned)s->settings.enemy_speed_percent, (unsigned)s->settings.tilt_sensitivity_percent);
+        (unsigned)s->ship_angle, (unsigned)s->phase_ticks, s->invincible ? "true" : "false",
+        s->autofire ? "true" : "false", a->frozen ? "true" : "false", (unsigned)s->control_mode,
+        (unsigned)s->reboot_progress, s->tilt_ready ? "true" : "false", enemies, shots, hostile,
+        game_state_hash(s), s->pause_settings ? "true" : "false", (unsigned)s->settings.fire_rate,
+        (unsigned)s->settings.enemy_speed_percent, (unsigned)s->settings.tilt_sensitivity_percent,
+        (unsigned)s->tilt_progress, (int)s->tilt_preview);
     return n > 0 && (size_t)n < cap;
 }
 static bool set(void *ctx, const char *key, int32_t n) {

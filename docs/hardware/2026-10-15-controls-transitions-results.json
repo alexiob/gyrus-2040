@@ -1,0 +1,31 @@
+{
+  "firmware": "gyrus_game",
+  "uf2_sha256": "2f076d1b1d379b5b546be88a15bbbd8bbff7114da35c4a24393b5ef212c75eb9",
+  "flash_verified": true,
+  "host_tests": 21,
+  "host_tests_passed": 21,
+  "device_native_cases": 36,
+  "device_native_pixels_and_hash_match": true,
+  "cpu_hz": 125000000,
+  "spi_hz": 62500000,
+  "elf_text_bytes": 138824,
+  "elf_bss_bytes": 141648,
+  "hardware_tilt_stationary_ready": true,
+  "physical_user_acceptance": "pending",
+  "stationary_live_check": {
+    "duration_seconds": 89.874,
+    "samples": 415,
+    "all_samples_tilt_ready": true,
+    "preview_min": 0,
+    "preview_max": 0,
+    "physical_movement_observed": false,
+    "physical_touch_observed": false,
+    "presented_fps": 60.0,
+    "dropped_frames_delta": 0,
+    "sim_overruns_delta": 0,
+    "touch_errors_delta": 0,
+    "display_errors_delta": 0,
+    "max_observed_present_us": 14426,
+    "max_observed_render_us": 8482
+  }
+}

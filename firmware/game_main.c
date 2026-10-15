@@ -35,6 +35,8 @@ static game_state game;
 static controls_state controls;
 static controls_motion last_motion;
 static bool have_motion;
+static diag_touch last_touch;
+static bool last_touch_invalid;
 static gyrus_debug_game adapter;
 static gyrus_debug protocol;
 static gyrus_debug_callbacks game_callbacks;
@@ -109,11 +111,14 @@ static void display_core(void) {
 }
 
 static controls_screen screen(void) {
+    if (game.pause_settings &&
+        (game.phase == GAME_TITLE || game.phase == GAME_OVER || game.phase == GAME_PAUSED))
+        return CONTROLS_SETTINGS;
     switch (game.phase) {
     case GAME_TITLE:
         return CONTROLS_TITLE;
     case GAME_PAUSED:
-        return game.pause_settings ? CONTROLS_SETTINGS : CONTROLS_PAUSE;
+        return CONTROLS_PAUSE;
     case GAME_OVER:
         return CONTROLS_GAME_OVER;
     default:
@@ -125,6 +130,8 @@ static void sync_ui(uint32_t now_ms) {
     game.control_mode = (uint8_t)controls.mode;
     game.reboot_progress = controls_reboot_progress(&controls, now_ms);
     game.tilt_ready = controls_tilt_ready(&controls);
+    game.tilt_progress = controls_tilt_progress(&controls, now_ms);
+    game.tilt_preview = controls_tilt_preview(&controls);
 }
 
 static void simulate(void) {
@@ -136,6 +143,8 @@ static void simulate(void) {
         controls_cancel_touch(&controls);
         ++touch_failures;
     }
+    last_touch = touch;
+    last_touch_invalid = touch_invalid;
     bool fire = false;
     if (core1_ready && !buttons_read_fire(&fire))
         ++button_failures;
@@ -268,7 +277,9 @@ static bool debug_state(void *context, char *out, size_t capacity) {
         ",\"sim_overruns\":%" PRIu32 ",\"control_mode\":%u,\"imu_ok\":%s,"
         "\"imu_revision\":%u,\"motion_age_ms\":%" PRIu32 ",\"accel_mg\":[%" PRId32 ",%" PRId32
         ",%" PRId32 "],"
-        "\"gyro_mdps\":[%" PRId32 ",%" PRId32 ",%" PRId32 "]}}",
+        "\"gyro_mdps\":[%" PRId32 ",%" PRId32 ",%" PRId32 "],"
+        "\"touch\":[%u,%u,%u],\"touch_invalid\":%s,\"touch_target\":%u,"
+        "\"touch_cancelled\":%s,\"touch_wait_release\":%s}}",
         clock_get_hz(clk_sys), clock_get_hz(clk_peri), lcd_baud, lcd_ok ? "false" : "true",
         lcd_error_count, rendered_frames, presented_frames, dropped_frames, render_last_us,
         render_max_us, present_last_us, present_max_us, sim_max_us, touch_failures,
@@ -276,7 +287,11 @@ static bool debug_state(void *context, char *out, size_t capacity) {
         sensors.imu_ok ? "true" : "false", (unsigned)sensors.imu_revision,
         have_motion ? (uint32_t)(time_us_64() / 1000u) - last_motion.sampled_ms : UINT32_MAX,
         last_motion.accel_mg[0], last_motion.accel_mg[1], last_motion.accel_mg[2],
-        last_motion.gyro_mdps[0], last_motion.gyro_mdps[1], last_motion.gyro_mdps[2]);
+        last_motion.gyro_mdps[0], last_motion.gyro_mdps[1], last_motion.gyro_mdps[2],
+        last_touch.pressed ? 1u : 0u, (unsigned)last_touch.x, (unsigned)last_touch.y,
+        last_touch_invalid ? "true" : "false", (unsigned)controls.touch_target,
+        controls.touch_cancelled ? "true" : "false",
+        controls.touch_wait_release ? "true" : "false");
     return added > 0 && (size_t)added < capacity - used + 1u;
 }
 

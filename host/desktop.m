@@ -154,11 +154,14 @@ static void poll_socket(void) {
     }
 }
 static controls_screen current_screen(void) {
+    if (app.game.pause_settings && (app.game.phase == GAME_TITLE || app.game.phase == GAME_OVER ||
+                                    app.game.phase == GAME_PAUSED))
+        return CONTROLS_SETTINGS;
     switch (app.game.phase) {
     case GAME_TITLE:
         return CONTROLS_TITLE;
     case GAME_PAUSED:
-        return app.game.pause_settings ? CONTROLS_SETTINGS : CONTROLS_PAUSE;
+        return CONTROLS_PAUSE;
     case GAME_OVER:
         return CONTROLS_GAME_OVER;
     default:
@@ -210,6 +213,8 @@ static void simulate(void) {
     app.game.control_mode = (uint8_t)app.controls.mode;
     app.game.reboot_progress = controls_reboot_progress(&app.controls, sample.now_ms);
     app.game.tilt_ready = controls_tilt_ready(&app.controls);
+    app.game.tilt_progress = controls_tilt_progress(&app.controls, sample.now_ms);
+    app.game.tilt_preview = controls_tilt_preview(&app.controls);
     game_input retained = app.adapter.input;
     game_input *input = &app.adapter.input;
     if (app.left != app.right)

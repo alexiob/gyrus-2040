@@ -70,8 +70,11 @@ updates both simulation UI and live controls. Tunable fields are `fire_rate`
 `pause_settings` page flag. Stage changes use `LEVEL`; the entity
 arrays and game phase cannot be overwritten. `STATE` reports tick, RNG state,
 score, high score, lives, stage, planet, warp, double fire, phase name, ship
-angle, invincibility, autofire, frozen status, control mode, tilt calibration readiness, reboot progress,
-entity counts, and state hash.
+angle, invincibility, autofire, frozen status, control mode, tilt calibration readiness/progress and signed steering preview, phase ticks, reboot progress,
+entity counts, and state hash. Transition phase names are `clear`, `warp`, and
+`arrival`; the chance result uses `clear` before its warp. On hardware, STATE
+also includes raw touch coordinates/pressed state, touch validity/target/interlocks,
+and fresh accelerometer/gyroscope samples.
 The hash covers simulation state; freeze status and retained debug inputs live
 outside it.
 
@@ -80,9 +83,10 @@ a call without incrementing the reported game tick.
 
 Menu pulses are 0=none, 1=open Settings, 2=Back, 3/4=fire rate down/up,
 5/6=enemy speed down/up, 7/8=tilt sensitivity down/up. They are consumed after
-one update, even when STEP requests multiple updates. Open/Back only operate
-while the game is paused; adjustments additionally require the Settings page.
-For example, `INPUT pause=1`, `STEP 1`, `INPUT menu=1`, `STEP 1` opens Settings.
+one update, even when STEP requests multiple updates. Open/Back operate on the title, game-over, or pause menu; adjustments require
+the Settings page. The legacy `pause_settings` flag names this page in all three contexts.
+From the title, `INPUT menu=1`, `STEP 1` opens Settings directly. During play,
+first use `INPUT pause=1`, `STEP 1`.
 `INPUT menu=4`, `STEP 1` increases fire rate by one without advancing gameplay.
 Settings survive quit/newgame. `RESET seed` restores defaults for repeatable
 scenarios; no settings are written to flash.

@@ -9,58 +9,59 @@
 #define CONTROLS_START_X1 180u
 #define CONTROLS_START_Y0 92u
 #define CONTROLS_START_Y1 136u
-#define CONTROLS_MODE_X0 48u
-#define CONTROLS_MODE_X1 192u
-#define CONTROLS_MODE_Y0 145u
-#define CONTROLS_MODE_Y1 177u
 #define CONTROLS_RESUME_X0 60u
 #define CONTROLS_RESUME_X1 180u
-#define CONTROLS_RESUME_Y0 68u
-#define CONTROLS_RESUME_Y1 92u
-#define CONTROLS_PAUSE_MODE_X0 48u
-#define CONTROLS_PAUSE_MODE_X1 192u
-#define CONTROLS_PAUSE_MODE_Y0 98u
-#define CONTROLS_PAUSE_MODE_Y1 122u
+#define CONTROLS_RESUME_Y0 80u
+#define CONTROLS_RESUME_Y1 104u
 #define CONTROLS_QUIT_X0 60u
 #define CONTROLS_QUIT_X1 180u
-#define CONTROLS_QUIT_Y0 158u
-#define CONTROLS_QUIT_Y1 182u
+#define CONTROLS_QUIT_Y0 149u
+#define CONTROLS_QUIT_Y1 173u
 #define CONTROLS_REBOOT_X0 68u
 #define CONTROLS_REBOOT_X1 172u
-#define CONTROLS_REBOOT_Y0 188u
-#define CONTROLS_REBOOT_Y1 212u
+#define CONTROLS_REBOOT_Y0 183u
+#define CONTROLS_REBOOT_Y1 207u
 #define CONTROLS_SETTINGS_X0 60u
 #define CONTROLS_SETTINGS_X1 180u
-#define CONTROLS_SETTINGS_Y0 128u
-#define CONTROLS_SETTINGS_Y1 152u
+#define CONTROLS_SETTINGS_Y0 115u
+#define CONTROLS_SETTINGS_Y1 139u
 #define CONTROLS_FIRE_DOWN_X0 42u
 #define CONTROLS_FIRE_DOWN_X1 80u
-#define CONTROLS_FIRE_DOWN_Y0 78u
-#define CONTROLS_FIRE_DOWN_Y1 106u
+#define CONTROLS_FIRE_DOWN_Y0 94u
+#define CONTROLS_FIRE_DOWN_Y1 120u
 #define CONTROLS_FIRE_UP_X0 160u
 #define CONTROLS_FIRE_UP_X1 198u
-#define CONTROLS_FIRE_UP_Y0 78u
-#define CONTROLS_FIRE_UP_Y1 106u
+#define CONTROLS_FIRE_UP_Y0 94u
+#define CONTROLS_FIRE_UP_Y1 120u
 #define CONTROLS_ENEMY_DOWN_X0 42u
 #define CONTROLS_ENEMY_DOWN_X1 80u
-#define CONTROLS_ENEMY_DOWN_Y0 124u
-#define CONTROLS_ENEMY_DOWN_Y1 152u
+#define CONTROLS_ENEMY_DOWN_Y0 137u
+#define CONTROLS_ENEMY_DOWN_Y1 163u
 #define CONTROLS_ENEMY_UP_X0 160u
 #define CONTROLS_ENEMY_UP_X1 198u
-#define CONTROLS_ENEMY_UP_Y0 124u
-#define CONTROLS_ENEMY_UP_Y1 152u
+#define CONTROLS_ENEMY_UP_Y0 137u
+#define CONTROLS_ENEMY_UP_Y1 163u
 #define CONTROLS_TILT_DOWN_X0 42u
 #define CONTROLS_TILT_DOWN_X1 80u
-#define CONTROLS_TILT_DOWN_Y0 170u
-#define CONTROLS_TILT_DOWN_Y1 198u
+#define CONTROLS_TILT_DOWN_Y0 180u
+#define CONTROLS_TILT_DOWN_Y1 206u
 #define CONTROLS_TILT_UP_X0 160u
 #define CONTROLS_TILT_UP_X1 198u
-#define CONTROLS_TILT_UP_Y0 170u
-#define CONTROLS_TILT_UP_Y1 198u
+#define CONTROLS_TILT_UP_Y0 180u
+#define CONTROLS_TILT_UP_Y1 206u
 #define CONTROLS_BACK_X0 78u
 #define CONTROLS_BACK_X1 162u
-#define CONTROLS_BACK_Y0 205u
-#define CONTROLS_BACK_Y1 229u
+#define CONTROLS_BACK_Y0 209u
+#define CONTROLS_BACK_Y1 231u
+/* Title Settings occupies the former mode button. Mode selection is inside Settings. */
+#define CONTROLS_TITLE_SETTINGS_X0 48u
+#define CONTROLS_TITLE_SETTINGS_X1 192u
+#define CONTROLS_TITLE_SETTINGS_Y0 145u
+#define CONTROLS_TITLE_SETTINGS_Y1 177u
+#define CONTROLS_SETTINGS_MODE_X0 48u
+#define CONTROLS_SETTINGS_MODE_X1 192u
+#define CONTROLS_SETTINGS_MODE_Y0 52u
+#define CONTROLS_SETTINGS_MODE_Y1 76u
 #define CONTROLS_CENTER_X 120
 #define CONTROLS_CENTER_Y 120
 #define CONTROLS_CENTER_RADIUS 36
@@ -130,10 +131,13 @@ typedef struct {
     bool drag_valid;
     controls_target touch_target;
     bool tilt_ready, tilt_available, tilt_have_sample, tilt_calibrating;
-    uint16_t tilt_calibration_count, tilt_reference;
+    uint16_t tilt_calibration_count;
     uint32_t tilt_last_ms, tilt_calibration_started;
-    int32_t tilt_neutral, tilt_angle, tilt_filtered, tilt_gyro_bias;
-    int32_t tilt_angle_sum, tilt_gyro_sum;
+    int32_t tilt_angle, tilt_filtered;
+    int32_t tilt_gravity[3], tilt_right[3], tilt_axis[3]; /* Learned Q14 basis. */
+    int32_t tilt_calibration_reference[3], tilt_accel_sum[3];
+    int32_t tilt_gyro_sum[3], tilt_gyro_bias[3];
+    int16_t tilt_preview_value;
 
 } controls_state;
 
@@ -144,6 +148,8 @@ void controls_cancel_touch(controls_state *state);
 void controls_tilt_reset(controls_state *state);
 bool controls_tilt_ready(const controls_state *state);
 uint16_t controls_tilt_progress(const controls_state *state, uint32_t now_ms);
+/* Post-sensitivity steering preview, signed -1000..1000; zero until ready. */
+int16_t controls_tilt_preview(const controls_state *state);
 const char *controls_mode_name(controls_mode mode);
 controls_target controls_hit_test(controls_screen screen, uint16_t x, uint16_t y);
 /* Call with a monotonic wrapping uint32 millisecond clock, normally once/tick.

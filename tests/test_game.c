@@ -161,6 +161,66 @@ static int bonus(void) {
     CHECK(g.score == 99999999);
     return 0;
 }
+static void finish_fixture(game_state *g, unsigned stage, unsigned destroyed) {
+    game_init(g, 2040);
+    (void)game_set_stage(g, stage);
+    g->phase = g->warp == 0u ? GAME_CHANCE : GAME_PLAY;
+    g->spawned = g->stage_target;
+    g->destroyed = (uint16_t)destroyed;
+    g->enemy_ticks = 501;
+    g->autofire = false;
+    g->double_fire = 1;
+    g->ship_angle = 16384;
+    game_step(g, NULL);
+}
+static int transitions(void) {
+    game_state g;
+    for (unsigned stage = 1; stage <= 2; ++stage) {
+        finish_fixture(&g, stage, 39);
+        CHECK(g.phase == GAME_CLEAR && !g.clear_chance && g.phase_ticks == 0);
+        CHECK(g.stage == stage && g.double_fire && g.lives == 3);
+        game_step(&g, &(game_input){.pause = true});
+        CHECK(g.phase == GAME_PAUSED && g.resume_phase == GAME_CLEAR);
+        game_step(&g, NULL);
+        CHECK(g.phase_ticks == 0);
+        game_step(&g, &(game_input){.pause = true});
+        for (unsigned t = 0; t < GAME_CLEAR_TICKS; ++t)
+            game_step(&g, &(game_input){.turn = 1, .fire = true});
+        CHECK(g.phase == GAME_WARP && g.phase_ticks == 0 && g.ship_angle == 16384);
+        for (unsigned t = 0; t < GAME_WARP_TICKS - 1; ++t)
+            game_step(&g, NULL);
+        CHECK(g.phase == GAME_WARP && g.stage == stage);
+        game_step(&g, NULL);
+        if (stage == 2) {
+            CHECK(g.phase == GAME_ARRIVAL && g.phase_ticks == 0 && g.planet == 0);
+            for (unsigned t = 0; t < GAME_ARRIVAL_TICKS; ++t)
+                game_step(&g, NULL);
+        }
+        CHECK(g.phase == GAME_INTRO && g.stage == stage + 1 && g.phase_ticks == 0);
+        CHECK(g.ship_angle == 32768 && g.double_fire && g.lives == 3);
+        for (unsigned i = 0; i < GAME_SHOTS; ++i)
+            CHECK(!g.shots[i].active && !g.hostile[i].active);
+        for (unsigned t = 0; t < 90; ++t)
+            game_step(&g, NULL);
+        CHECK(g.phase == (stage == 2 ? GAME_CHANCE : GAME_PLAY));
+    }
+    for (unsigned destroyed = 39; destroyed <= 40; ++destroyed) {
+        finish_fixture(&g, 3, destroyed);
+        const unsigned bonus_score = destroyed == 40 ? 10000 : 3900;
+        CHECK(g.phase == GAME_CLEAR && g.clear_chance);
+        CHECK(g.score == bonus_score && g.transition_bonus == bonus_score);
+        for (unsigned t = 0; t < GAME_CHANCE_RESULT_TICKS - 1; ++t)
+            game_step(&g, NULL);
+        CHECK(g.phase == GAME_CLEAR && g.score == bonus_score && g.stage == 3);
+        game_step(&g, NULL);
+        CHECK(g.phase == GAME_WARP && g.stage == 3 && g.score == bonus_score);
+        for (unsigned t = 0; t < GAME_WARP_TICKS; ++t)
+            game_step(&g, NULL);
+        CHECK(g.phase == GAME_INTRO && g.stage == 4 && g.score == bonus_score);
+        CHECK(!g.clear_chance && g.transition_bonus == 0);
+    }
+    return 0;
+}
 static int autofire_test(void) {
     game_state g;
     game_init(&g, 42);
@@ -193,6 +253,8 @@ static int autofire_test(void) {
 int main(int argc, char **argv) {
     if (argc != 2)
         return 2;
+    if (strcmp(argv[1], "transitions") == 0)
+        return transitions();
     if (strcmp(argv[1], "autofire") == 0)
         return autofire_test();
     if (strcmp(argv[1], "initial") == 0)

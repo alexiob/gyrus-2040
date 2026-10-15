@@ -167,6 +167,7 @@ static void finish_fixture(game_state *g, unsigned stage, unsigned destroyed) {
     g->phase = g->warp == 0u ? GAME_CHANCE : GAME_PLAY;
     g->spawned = g->stage_target;
     g->destroyed = (uint16_t)destroyed;
+    g->escaped = (uint16_t)(g->stage_target - destroyed);
     g->enemy_ticks = 501;
     g->autofire = false;
     g->double_fire = 1;

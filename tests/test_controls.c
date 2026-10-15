@@ -523,7 +523,35 @@ static void menu_arrow_recalibrates_comfortable_neutral(void) {
     (void)step(CONTROLS_TITLE, 2320, false, 0, 0, false);
     assert(controls_tilt_ready(&state)); /* Failed bus read is not a tap. */
 }
+static void launcher_swipe_and_special_are_single_pulses(void) {
+    controls_init(&state);
+    (void)step(CONTROLS_HUB, 0, false, 0, 0, false);
+    (void)step(CONTROLS_HUB, 20, true, 210, 110, false);
+    assert(step(CONTROLS_HUB, 40, false, 0, 0, false).input.navigate == 1);
+    assert(step(CONTROLS_HUB, 60, false, 0, 0, false).input.navigate == 0);
+    (void)step(CONTROLS_HUB, 80, true, 120, 80, false);
+    (void)step(CONTROLS_HUB, 100, true, 70, 85, false);
+    assert(step(CONTROLS_HUB, 120, false, 0, 0, false).input.navigate == 1);
+    (void)step(CONTROLS_HUB, 140, true, 120, 80, false);
+    (void)step(CONTROLS_HUB, 160, true, 175, 85, false);
+    assert(step(CONTROLS_HUB, 180, false, 0, 0, false).input.navigate == -1);
+    (void)step(CONTROLS_TEMPEST_PLAY, 200, false, 0, 0, false);
+    assert(!step(CONTROLS_TEMPEST_PLAY, 220, false, 0, 0, true).input.special);
+    controls_output out = step(CONTROLS_TEMPEST_PLAY, 250, false, 0, 0, true);
+    assert(out.input.special && !out.input.fire);
+    assert(!step(CONTROLS_TEMPEST_PLAY, 280, false, 0, 0, true).input.special);
+    (void)step(CONTROLS_TEMPEST_PLAY, 300, false, 0, 0, false);
+    (void)step(CONTROLS_TEMPEST_PLAY, 330, true, 120, 188, false);
+    assert(!step(CONTROLS_TEMPEST_PLAY, 360, true, 120, 188, false).input.special);
+    assert(step(CONTROLS_TEMPEST_PLAY, 390, false, 0, 0, false).input.special);
+    assert(!step(CONTROLS_TEMPEST_PLAY, 420, false, 0, 0, false).input.special);
+    (void)step(CONTROLS_HUB, 440, true, 120, 160, true);
+    controls_consume_inputs(&state);
+    assert(!step(CONTROLS_HUB, 480, true, 120, 160, true).input.start);
+    assert(!step(CONTROLS_HUB, 500, false, 0, 0, false).input.start);
+}
 int main(void) {
+    launcher_swipe_and_special_are_single_pulses();
     menu_arrow_recalibrates_comfortable_neutral();
     degenerate_bank_projection_stops_then_recalibrates();
     settings_tilt_preview_and_fresh_context_preservation();

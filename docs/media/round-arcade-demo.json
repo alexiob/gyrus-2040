@@ -1,0 +1,109 @@
+{
+  "source": "native C11 headless renderer; software capture, not camera footage",
+  "engine_commit": "46256559ed6370843bfe19352fcbb592c77625b1",
+  "seed": 2040,
+  "simulation_hz": 60,
+  "capture_fps": 30,
+  "frames": 1848,
+  "duration_seconds": 61.6,
+  "dimensions": [
+    720,
+    720
+  ],
+  "codec": "H.264 High level 3.1, yuv420p",
+  "audio_streams": 0,
+  "bytes": 3253045,
+  "sha256": "5cf613f4f20e8edea81038a79c45299ea45ba25524cab6b891fd6f62ff57ce20",
+  "faststart": true,
+  "invincibility": false,
+  "level_skipping": false,
+  "autofire": true,
+  "github_attachment": "https://github.com/user-attachments/assets/c9fabc5a-87a6-4457-b8e2-3b7ec1dce93b",
+  "chapters": [
+    {
+      "name": "menu-gyrus",
+      "start_seconds": 0.0,
+      "duration_seconds": 2.0
+    },
+    {
+      "name": "scroll-tempest",
+      "start_seconds": 2.0,
+      "duration_seconds": 1.2
+    },
+    {
+      "name": "menu-tempest-classic",
+      "start_seconds": 3.2,
+      "duration_seconds": 1.5
+    },
+    {
+      "name": "menu-tempest-neon",
+      "start_seconds": 4.7,
+      "duration_seconds": 1.2
+    },
+    {
+      "name": "settings",
+      "start_seconds": 5.9,
+      "duration_seconds": 2.0
+    },
+    {
+      "name": "scroll-gyrus",
+      "start_seconds": 7.9,
+      "duration_seconds": 1.5
+    },
+    {
+      "name": "gyrus-intro",
+      "start_seconds": 9.4,
+      "duration_seconds": 1.5
+    },
+    {
+      "name": "gyrus-gameplay",
+      "start_seconds": 10.9,
+      "duration_seconds": 20.0
+    },
+    {
+      "name": "gyrus-pause",
+      "start_seconds": 30.9,
+      "duration_seconds": 1.5
+    },
+    {
+      "name": "return-to-menu",
+      "start_seconds": 32.4,
+      "duration_seconds": 1.0
+    },
+    {
+      "name": "select-tempest",
+      "start_seconds": 33.4,
+      "duration_seconds": 1.2
+    },
+    {
+      "name": "tempest-intro",
+      "start_seconds": 34.6,
+      "duration_seconds": 1.0
+    },
+    {
+      "name": "tempest-gameplay",
+      "start_seconds": 35.6,
+      "duration_seconds": 24.0
+    },
+    {
+      "name": "final-menu",
+      "start_seconds": 59.6,
+      "duration_seconds": 2.0
+    }
+  ],
+  "gameplay_end_states": {
+    "gyrus-gameplay": {
+      "phase": "intro",
+      "stage": 2,
+      "score": 9500,
+      "lives": 3,
+      "invincible": false
+    },
+    "tempest-gameplay": {
+      "phase": "play",
+      "stage": 2,
+      "score": 3400,
+      "lives": 3
+    }
+  }
+}

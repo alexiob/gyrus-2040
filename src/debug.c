@@ -111,7 +111,7 @@ static bool parse_input(char **t, size_t count, gyrus_debug_input *out) {
         if (!eq)
             return false;
         *eq++ = 0;
-        uint8_t mask;
+        uint16_t mask;
         int32_t v;
         if (!strcmp(t[i], "turn")) {
             mask = GYRUS_INPUT_TURN;
@@ -125,9 +125,14 @@ static bool parse_input(char **t, size_t count, gyrus_debug_input *out) {
             out->angle_delta = (int16_t)v;
         } else if (!strcmp(t[i], "menu")) {
             mask = GYRUS_INPUT_MENU;
-            if (!signed_number(eq, 0, 8, &v))
+            if (!signed_number(eq, 0, 9, &v))
                 return false;
             out->menu_action = (uint8_t)v;
+        } else if (!strcmp(t[i], "navigate")) {
+            mask = GYRUS_INPUT_NAVIGATE;
+            if (!signed_number(eq, -1, 1, &v))
+                return false;
+            out->navigate = (int8_t)v;
         } else {
             if (!signed_number(eq, 0, 1, &v))
                 return false;
@@ -143,6 +148,12 @@ static bool parse_input(char **t, size_t count, gyrus_debug_input *out) {
             } else if (!strcmp(t[i], "quit")) {
                 mask = GYRUS_INPUT_QUIT;
                 out->quit = v != 0;
+            } else if (!strcmp(t[i], "special")) {
+                mask = GYRUS_INPUT_SPECIAL;
+                out->special = v != 0;
+            } else if (!strcmp(t[i], "home")) {
+                mask = GYRUS_INPUT_HOME;
+                out->home = v != 0;
             } else
                 return false;
         }
@@ -153,7 +164,7 @@ static bool parse_input(char **t, size_t count, gyrus_debug_input *out) {
     return true;
 }
 static void process(gyrus_debug *d) {
-    char *tokens[12];
+    char *tokens[16];
     size_t count = 0;
     char *p = d->line;
     while (*p) {
@@ -161,7 +172,7 @@ static void process(gyrus_debug *d) {
             p++;
         if (!*p)
             break;
-        if (count == 12) {
+        if (count == 16) {
             reply(d, 0, "syntax");
             return;
         }
@@ -191,9 +202,12 @@ static void process(gyrus_debug *d) {
             emit(d, out, (size_t)n);
         return;
     }
-    if (!strcmp(cmd, "STATE") && count == 3) {
+    if ((!strcmp(cmd, "STATE") || !strcmp(cmd, "GAMES")) && count == 3) {
+        bool games = !strcmp(cmd, "GAMES");
         char state[GYRUS_DEBUG_STATE_MAX] = {0};
-        if (!d->callbacks.state || !d->callbacks.state(ctx, state, sizeof state)) {
+        bool (*provider)(void *, char *, size_t) =
+            games ? d->callbacks.catalogue : d->callbacks.state;
+        if (!provider || !provider(ctx, state, sizeof state)) {
             reply(d, id, "unavailable");
             return;
         }
@@ -206,8 +220,9 @@ static void process(gyrus_debug *d) {
             return;
         }
         char header[80];
-        int n = snprintf(header, sizeof header,
-                         "{\"v\":1,\"id\":%" PRIu32 ",\"ok\":true,\"state\":", id);
+        int n =
+            snprintf(header, sizeof header, "{\"v\":1,\"id\":%" PRIu32 ",\"ok\":true,\"%s\":", id,
+                     games ? "catalogue" : "state");
         if (n > 0 && (size_t)n < sizeof header) {
             emit(d, header, (size_t)n);
             emit(d, state, length);
@@ -254,7 +269,19 @@ static void process(gyrus_debug *d) {
                 reply(d, id, "range");
                 return;
             }
-        } else if (!strcmp(cmd, "PAUSE") && count == 3)
+        } else if (!strcmp(cmd, "GAME") && count == 4) {
+            action = GYRUS_DEBUG_GAME;
+            if (!strcmp(tokens[3], "gyrus"))
+                n = 0;
+            else if (!strcmp(tokens[3], "tempest"))
+                n = 1;
+            else if (!unsigned_number(tokens[3], 255, &n)) {
+                reply(d, id, "range");
+                return;
+            }
+        } else if (!strcmp(cmd, "HOME") && count == 3)
+            action = GYRUS_DEBUG_HOME;
+        else if (!strcmp(cmd, "PAUSE") && count == 3)
             action = GYRUS_DEBUG_PAUSE;
         else if (!strcmp(cmd, "RESUME") && count == 3)
             action = GYRUS_DEBUG_RESUME;

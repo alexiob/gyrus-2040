@@ -1,9 +1,7 @@
 #include "buttons.h"
 #include "display.h"
-#include "gyrus/assets.h"
-#include "gyrus/controls.h"
-#include "gyrus/debug_game.h"
-#include "gyrus/video.h"
+#include "engine/debug_session.h"
+#include "engine/video.h"
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 #include "pico/flash.h"
@@ -17,9 +15,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define FRAME_PIXELS (GAME_WIDTH * GAME_HEIGHT)
+#define FRAME_PIXELS (ENGINE_WIDTH * ENGINE_HEIGHT)
 #define STRIP_ROWS 16u
-#define STRIP_PIXELS (GAME_WIDTH * STRIP_ROWS)
+#define STRIP_PIXELS (ENGINE_WIDTH * STRIP_ROWS)
 #define FRAME_COUNT 2u
 #ifndef GYRUS_PRESENT_HZ
 #define GYRUS_PRESENT_HZ 60u
@@ -31,13 +29,14 @@ _Static_assert(GYRUS_PRESENT_HZ == 30u || GYRUS_PRESENT_HZ == 60u, "presentation
 static uint8_t indexed[FRAME_COUNT][FRAME_PIXELS];
 static uint16_t strips[2][STRIP_PIXELS];
 static queue_t free_frames, ready_frames;
-static game_state game;
-static controls_state controls;
+static engine_state engine;
+/* Published with each queue slot; a game switch cannot recolor an older frame. */
+static const uint16_t *frame_palettes[FRAME_COUNT];
 static controls_motion last_motion;
 static bool have_motion;
 static diag_touch last_touch;
 static bool last_touch_invalid;
-static gyrus_debug_game adapter;
+static engine_debug_session adapter;
 static gyrus_debug protocol;
 static gyrus_debug_callbacks game_callbacks;
 static sensor_info sensors;
@@ -53,14 +52,16 @@ static bool usb_transport_failed;
 
 static bool present(uint8_t frame_index, bool full) {
     video_span span = video_strip_span(0, full);
-    size_t count = video_expand_strip(indexed[frame_index], 0, full, strips[0], STRIP_PIXELS);
+    size_t count = video_expand_strip_palette(indexed[frame_index], frame_palettes[frame_index], 0,
+                                              full, strips[0], STRIP_PIXELS);
     if (!display_start(span.x, 0, span.width, STRIP_ROWS, strips[0], count, true))
         return false;
     for (unsigned strip = 1; strip < VIDEO_STRIPS; ++strip) {
         unsigned target = strip & 1u;
         span = video_strip_span(strip, full);
         /* Convert while DMA reads the other immutable SRAM strip. */
-        count = video_expand_strip(indexed[frame_index], strip, full, strips[target], STRIP_PIXELS);
+        count = video_expand_strip_palette(indexed[frame_index], frame_palettes[frame_index], strip,
+                                           full, strips[target], STRIP_PIXELS);
         if (!display_wait(NULL))
             return false;
         if (!display_start(span.x, (uint16_t)(strip * STRIP_ROWS), span.width, STRIP_ROWS,
@@ -110,37 +111,13 @@ static void display_core(void) {
     }
 }
 
-static controls_screen screen(void) {
-    if (game.pause_settings &&
-        (game.phase == GAME_TITLE || game.phase == GAME_OVER || game.phase == GAME_PAUSED))
-        return CONTROLS_SETTINGS;
-    switch (game.phase) {
-    case GAME_TITLE:
-        return CONTROLS_TITLE;
-    case GAME_PAUSED:
-        return CONTROLS_PAUSE;
-    case GAME_OVER:
-        return CONTROLS_GAME_OVER;
-    default:
-        return CONTROLS_PLAY;
-    }
-}
-
-static void sync_ui(uint32_t now_ms) {
-    game.control_mode = (uint8_t)controls.mode;
-    game.reboot_progress = controls_reboot_progress(&controls, now_ms);
-    game.tilt_ready = controls_tilt_ready(&controls);
-    game.tilt_progress = controls_tilt_progress(&controls, now_ms);
-    game.tilt_preview = controls_tilt_preview(&controls);
-}
-
 static void simulate(void) {
     uint64_t began = time_us_64();
     diag_touch touch = {0};
     bool touch_invalid = false;
     if (!sensors.touch_ok || !sensors_touch(&touch)) {
         touch_invalid = true;
-        controls_cancel_touch(&controls);
+        controls_cancel_touch(&engine.controls);
         ++touch_failures;
     }
     last_touch = touch;
@@ -165,32 +142,11 @@ static void simulate(void) {
         sensors_motion_to_display(&sample.motion);
         have_motion = true;
     }
-    sample.tilt_sensitivity_percent = game.settings.tilt_sensitivity_percent;
-    controls_output local = controls_update(&controls, sample, screen());
-    if (local.reboot_requested) {
+    if (engine_update(&engine, sample, NULL)) {
         watchdog_reboot(0, 0, 10);
         for (;;)
             tight_loop_contents();
     }
-    game_input retained = adapter.input;
-    if (!adapter.frozen) {
-        if (local.input.turn != 0)
-            adapter.input.turn = local.input.turn;
-        /* A finger movement takes precedence over an injected relative pulse;
-         * persistent injected turn/fire otherwise remain available. */
-        if (local.input.angle_delta != 0)
-            adapter.input.angle_delta = local.input.angle_delta;
-        adapter.input.fire = adapter.input.fire || local.input.fire;
-        adapter.input.start = adapter.input.start || local.input.start;
-        adapter.input.pause = adapter.input.pause || local.input.pause;
-        adapter.input.quit = adapter.input.quit || local.input.quit;
-        if (local.input.menu_action != GAME_MENU_NONE)
-            adapter.input.menu_action = local.input.menu_action;
-        gyrus_debug_game_tick(&adapter);
-        adapter.input.turn = retained.turn;
-        adapter.input.fire = retained.fire;
-    }
-    sync_ui(now_ms);
     uint32_t elapsed = (uint32_t)(time_us_64() - began);
     if (elapsed > sim_max_us)
         sim_max_us = elapsed;
@@ -203,7 +159,7 @@ static void render_next(void) {
         return;
     }
     uint64_t began = time_us_64();
-    game_render(&game, indexed[index]);
+    frame_palettes[index] = engine_render(&engine, indexed[index]);
     render_last_us = (uint32_t)(time_us_64() - began);
     if (render_last_us > render_max_us)
         render_max_us = render_last_us;
@@ -240,7 +196,7 @@ static void write_usb(void *context, const void *bytes, size_t count) {
 }
 
 static bool debug_frame(void *context, gyrus_debug_frame *out) {
-    gyrus_debug_game *debug = context;
+    engine_debug_session *debug = context;
     /* On core0 no new frame can be queued during this callback. When both
      * buffers are free, every earlier queued presentation is complete. */
     uint64_t deadline = time_us_64() + 1000000u;
@@ -254,7 +210,6 @@ static bool debug_frame(void *context, gyrus_debug_frame *out) {
         return false;
     debug_frame_index = index;
     debug->framebuffer = indexed[index];
-    sync_ui((uint32_t)(time_us_64() / 1000u));
     return game_callbacks.frame(context, out);
 }
 
@@ -269,7 +224,7 @@ static bool debug_state(void *context, char *out, size_t capacity) {
      * multi-field sample. No shared 64-bit accesses or extra lockout locks. */
     int added = snprintf(
         out + used - 1u, capacity - used + 1u,
-        ",\"hardware\":{\"firmware\":\"gyrus_game\",\"cpu_hz\":%" PRIu32 ",\"peri_hz\":%" PRIu32
+        ",\"hardware\":{\"firmware\":\"round_arcade\",\"cpu_hz\":%" PRIu32 ",\"peri_hz\":%" PRIu32
         ",\"spi_hz\":%" PRIu32 ",\"display_disabled\":%s,\"display_errors\":%" PRIu32
         ",\"rendered_frames\":%" PRIu32 ",\"presented_frames\":%" PRIu32
         ",\"dropped_frames\":%" PRIu32 ",\"render_us\":%" PRIu32 ",\"render_max_us\":%" PRIu32
@@ -284,15 +239,15 @@ static bool debug_state(void *context, char *out, size_t capacity) {
         clock_get_hz(clk_sys), clock_get_hz(clk_peri), lcd_baud, lcd_ok ? "false" : "true",
         lcd_error_count, rendered_frames, presented_frames, dropped_frames, render_last_us,
         render_max_us, present_last_us, present_max_us, sim_max_us, touch_failures,
-        sensors_irq_count(), button_failures, sim_overruns, (unsigned)controls.mode,
+        sensors_irq_count(), button_failures, sim_overruns, (unsigned)engine.controls.mode,
         sensors.imu_ok ? "true" : "false", (unsigned)sensors.imu_revision,
         have_motion ? (uint32_t)(time_us_64() / 1000u) - last_motion.sampled_ms : UINT32_MAX,
         last_motion.accel_mg[0], last_motion.accel_mg[1], last_motion.accel_mg[2],
         last_motion.gyro_mdps[0], last_motion.gyro_mdps[1], last_motion.gyro_mdps[2],
         last_touch.pressed ? 1u : 0u, (unsigned)last_touch.x, (unsigned)last_touch.y,
-        last_touch_invalid ? "true" : "false", (unsigned)controls.touch_target,
-        controls.touch_cancelled ? "true" : "false",
-        controls.touch_wait_release ? "true" : "false");
+        last_touch_invalid ? "true" : "false", (unsigned)engine.controls.touch_target,
+        engine.controls.touch_cancelled ? "true" : "false",
+        engine.controls.touch_wait_release ? "true" : "false");
     return added > 0 && (size_t)added < capacity - used + 1u;
 }
 
@@ -331,11 +286,9 @@ int main(void) {
         return 1;
     for (uint8_t i = 0; i < FRAME_COUNT; ++i)
         queue_add_blocking(&free_frames, &i);
-    game_init(&game, 2040u);
-    controls_init(&controls);
-    gyrus_debug_game_init(&adapter, &game, NULL, write_usb, NULL);
-    adapter.controls = &controls;
-    game_callbacks = gyrus_debug_game_callbacks(&adapter);
+    engine_init(&engine, 2040u);
+    engine_debug_session_init(&adapter, &engine, NULL, write_usb, NULL);
+    game_callbacks = engine_debug_session_callbacks(&adapter);
     gyrus_debug_callbacks callbacks = game_callbacks;
     callbacks.frame = debug_frame;
     callbacks.state = debug_state;
@@ -365,14 +318,14 @@ int main(void) {
         unsigned catchup = 0;
         while (time_us_64() >= next_tick && catchup < 4u) {
             simulate();
-            next_tick += 1000000u / GAME_TICK_HZ;
-            remainder += 1000000u % GAME_TICK_HZ;
-            if (remainder >= GAME_TICK_HZ) {
+            next_tick += 1000000u / ENGINE_TICK_HZ;
+            remainder += 1000000u % ENGINE_TICK_HZ;
+            if (remainder >= ENGINE_TICK_HZ) {
                 ++next_tick;
-                remainder -= GAME_TICK_HZ;
+                remainder -= ENGINE_TICK_HZ;
             }
             ++catchup;
-            if (++render_divider == GAME_TICK_HZ / GYRUS_PRESENT_HZ) {
+            if (++render_divider == ENGINE_TICK_HZ / GYRUS_PRESENT_HZ) {
                 render_divider = 0;
                 render_next();
             }
@@ -381,7 +334,7 @@ int main(void) {
          * becoming due after the while condition must run on the next pass. */
         if (catchup == 4u && time_us_64() >= next_tick) {
             ++sim_overruns;
-            next_tick = time_us_64() + 1000000u / GAME_TICK_HZ;
+            next_tick = time_us_64() + 1000000u / ENGINE_TICK_HZ;
             remainder = 0;
         }
         sleep_us(50);

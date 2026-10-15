@@ -1,26 +1,20 @@
 #include "gyrus/game.h"
+#include "engine/math.h"
+#include "games/gyrus/waves.h"
 #include <limits.h>
 #include <string.h>
 
-static const int16_t sine[256] = {
-#include "sine_table.inc"
-};
 static uint16_t add_angle(uint16_t a, int32_t delta) {
     return (uint16_t)((int32_t)a + delta);
 }
 int16_t game_sin_q15(uint16_t angle) {
-    return sine[angle >> 8u];
+    return engine_sin_q15(angle);
 }
 int16_t game_cos_q15(uint16_t angle) {
-    return sine[(uint8_t)((angle >> 8u) + 64u)];
+    return engine_cos_q15(angle);
 }
 void game_polar(uint16_t angle, int32_t radius, int16_t *x, int16_t *y) {
-    if (radius > 200 * 256)
-        radius = 200 * 256;
-    if (radius < -200 * 256)
-        radius = -200 * 256;
-    *x = (int16_t)(120 + ((int32_t)game_sin_q15(angle) * radius) / 8388608);
-    *y = (int16_t)(120 - ((int32_t)game_cos_q15(angle) * radius) / 8388608);
+    engine_polar(angle, radius, x, y);
 }
 static uint32_t random_word(game_state *g) {
     uint32_t x = g->rng;
@@ -90,6 +84,14 @@ bool game_set_stage(game_state *g, unsigned stage) {
     g->fire_rate_remainder = 0;
     g->enemy_time_remainder = 0;
     g->enemy_ticks = 0;
+    g->combat_ticks = 0;
+    g->final_escape_ticks = 0;
+    g->fifth_spawn_tick = 0;
+    g->entrance_complete = false;
+    g->fifth_decided = false;
+    memset(g->entrance_kills, 0, sizeof g->entrance_kills);
+    g->fifth_path_planet = 0;
+    g->fifth_path_formation = 0;
     g->invulnerable = 90;
     clear_entities(g);
     return true;
@@ -110,28 +112,14 @@ void game_start(game_state *g) {
 bool game_set_setting(game_state *g, game_setting setting, int32_t value) {
     if (!g)
         return false;
-    switch (setting) {
-    case GAME_SETTING_FIRE_RATE:
-        if (value < 1 || value > 10)
-            return false;
-        if (g->settings.fire_rate != (uint8_t)value) {
-            g->settings.fire_rate = (uint8_t)value;
-            g->fire_cooldown = 0;
-            g->fire_rate_remainder = 0;
-        }
-        return true;
-    case GAME_SETTING_ENEMY_SPEED:
-        if (value < 25 || value > 200 || value % 25 != 0)
-            return false;
-        g->settings.enemy_speed_percent = (uint16_t)value;
-        return true;
-    case GAME_SETTING_TILT_SENSITIVITY:
-        if (value < 50 || value > 200 || value % 25 != 0)
-            return false;
-        g->settings.tilt_sensitivity_percent = (uint16_t)value;
-        return true;
+    const uint8_t old_rate = g->settings.fire_rate;
+    if (!engine_settings_set(&g->settings, setting, value))
+        return false;
+    if (g->settings.fire_rate != old_rate) {
+        g->fire_cooldown = 0;
+        g->fire_rate_remainder = 0;
     }
-    return false;
+    return true;
 }
 static void pause_action(game_state *g, game_menu_action action) {
     if (action == GAME_MENU_SETTINGS) {
@@ -170,6 +158,19 @@ static void pause_action(game_state *g, game_menu_action action) {
     default:
         break;
     }
+}
+bool game_debug_complete_stage(game_state *g) {
+    if (!g || (g->phase != GAME_PLAY && g->phase != GAME_CHANCE))
+        return false;
+    for (unsigned i = 0; i < GAME_ENEMIES; ++i)
+        if (g->enemies[i].kind <= 2u)
+            g->enemies[i].active = 0;
+    g->spawned = g->stage_target;
+    g->destroyed = g->stage_target;
+    g->escaped = 0;
+    g->entrance_complete = true;
+    g->fifth_decided = true;
+    return true;
 }
 static void score_add(game_state *g, uint32_t amount) {
     const uint32_t before = g->score < 30000u ? 0u : 1u + (g->score - 30000u) / 60000u;
@@ -252,7 +253,15 @@ static void kill_enemy(game_state *g, game_enemy *e) {
     explosion(g, e->angle, e->radius, (uint8_t)(e->kind == 1u ? 6u : 9u));
     if (e->kind <= 2u) {
         ++g->destroyed;
-        score_add(g, g->phase == GAME_CHANCE ? 100u : 100u + (uint32_t)e->kind * 50u);
+        if (g->phase == GAME_PLAY && e->mode == GAME_ENEMY_ENTER && e->formation < 5u &&
+            g->entrance_kills[e->formation] < 10u) {
+            ++g->entrance_kills[e->formation];
+            if (g->entrance_kills[e->formation] == 10u)
+                score_add(g, 1000u + (uint32_t)e->formation * 500u);
+        }
+        score_add(g, g->phase == GAME_CHANCE        ? 100u
+                     : e->mode == GAME_ENEMY_ESCAPE ? 1000u
+                                                    : 100u + (uint32_t)e->kind * 50u);
     } else if (e->kind == 3u) {
         score_add(g, g->double_fire ? 2000u : 1000u);
         g->double_fire = 1;
@@ -279,13 +288,58 @@ static void update_stars_particles(game_state *g) {
         p->y = (int16_t)(p->y + p->vy);
     }
 }
+static void enemy_mode(game_enemy *e, game_enemy_mode mode) {
+    e->mode = (uint8_t)mode;
+    e->age = 0;
+}
+static int32_t angle_difference(uint16_t target, uint16_t current) {
+    const uint16_t delta = (uint16_t)(target - current);
+    return delta <= 32767u ? (int32_t)delta : (int32_t)delta - 65536;
+}
 static void update_enemies(game_state *g) {
     const bool chance = g->phase == GAME_CHANCE;
+    unsigned survivors = 0;
+    bool entering = false;
+    for (unsigned i = 0; i < GAME_ENEMIES; ++i) {
+        const game_enemy *e = &g->enemies[i];
+        if (e->active && e->kind <= 2u) {
+            ++survivors;
+            entering |= e->mode == GAME_ENEMY_ENTER;
+        }
+    }
+    if (!chance && !g->fifth_decided && g->spawned >= 40u && !entering) {
+        unsigned initial_kills = 0;
+        for (unsigned formation = 0; formation < 4u; ++formation)
+            initial_kills += g->entrance_kills[formation];
+        g->fifth_decided = true;
+        /* JoyStik confirms a fifth/last reinforcement when the formation is
+         * depleted. The >3/4 trigger is an inferred contemporary-guide rule;
+         * this decision clock is authored, not a ROM-exact reconstruction. */
+        if (initial_kills > 30u) {
+            const uint32_t choice = random_word(g);
+            g->fifth_path_planet = (uint8_t)(choice % 5u);
+            g->fifth_path_formation = (uint8_t)((choice / 5u) % 4u);
+            g->stage_target = 50;
+            g->fifth_spawn_tick = g->enemy_ticks;
+        }
+    }
+    if (!chance && g->fifth_decided && !g->entrance_complete && g->spawned >= g->stage_target &&
+        !entering)
+        g->entrance_complete = true;
+    if (g->entrance_complete && !chance) {
+        g->combat_ticks = (uint16_t)((g->combat_ticks + 1u) % 960u);
+        if (survivors > 0u && survivors <= 2u) {
+            if (g->final_escape_ticks < 360u)
+                ++g->final_escape_ticks;
+        } else
+            g->final_escape_ticks = 0;
+    }
     for (unsigned i = 0; i < GAME_ENEMIES; ++i) {
         game_enemy *e = &g->enemies[i];
         if (!e->active)
             continue;
-        ++e->age;
+        if (e->age < UINT16_MAX)
+            ++e->age;
         if (e->kind == 3u || e->kind == 6u) {
             e->angle = add_angle(e->angle, e->angular_speed / 8);
             if (e->age > 360u)
@@ -294,47 +348,73 @@ static void update_enemies(game_state *g) {
             e->radius += e->kind == 4u ? 384 : 96;
             if (e->radius > 130 * 256)
                 e->active = 0;
-        } else if (chance || e->mode == 4u) {
+        } else if (chance || e->mode == GAME_ENEMY_ESCAPE) {
             e->angle = add_angle(e->angle, e->angular_speed * 2);
-            e->radius += e->age < 85u ? 96 : 200;
+            e->radius += chance && e->age < 85u ? 96 : 200;
             if (e->radius > 130 * 256) {
                 e->active = 0;
                 ++g->escaped;
             }
         } else {
-            if (e->mode == 0u) {
-                e->radius += 64;
-                e->angle = add_angle(e->angle, e->angular_speed);
-                if (e->age >= 90u) {
-                    e->mode = 1;
-                    e->radius = (int32_t)(24u + (i % 3u) * 10u) * 256;
+            uint16_t home_angle;
+            int32_t home_radius;
+            gyrus_wave_home(g->planet, e->formation, e->member, g->combat_ticks, &home_angle,
+                            &home_radius);
+            if (e->mode == GAME_ENEMY_ENTER) {
+                gyrus_wave_entry(g->planet, e->formation, e->member,
+                                 e->formation == 4u ? g->fifth_path_planet : g->planet,
+                                 e->formation == 4u ? g->fifth_path_formation : e->formation,
+                                 e->age, &e->angle, &e->radius);
+                if (e->age >= GYRUS_ENTRY_TICKS) {
+                    /* Contemporary JoyStik explicitly distinguishes Mars:
+                     * each ship peels from entry separately. Other destinations
+                     * assemble the four groups before their combined attack. */
+                    enemy_mode(e, g->planet == 4u ? GAME_ENEMY_ATTACK : GAME_ENEMY_HOLD);
                 }
-            } else if (e->mode == 1u) {
-                e->angle = add_angle(e->angle, e->angular_speed / 4);
-                if (e->age > 150u && (e->age + i * 17u) % 170u == 0u)
-                    e->mode = 2;
-            } else if (e->mode == 2u) {
-                const int16_t difference = (int16_t)(uint16_t)(g->ship_angle - e->angle);
-                e->angle = add_angle(e->angle, difference / 24);
+            } else if (e->mode == GAME_ENEMY_HOLD) {
+                /* Approach the moving berth smoothly; never depend on pool index. */
+                e->angle = add_angle(e->angle, angle_difference(home_angle, e->angle) / 6);
+                if (g->entrance_complete) {
+                    const unsigned identity = (unsigned)e->formation * 10u + e->member;
+                    if (g->final_escape_ticks >= 360u && e->attacks > 0u)
+                        enemy_mode(e, GAME_ENEMY_ESCAPE);
+                    else if (g->combat_ticks >= 60u &&
+                             g->combat_ticks % 240u == (60u + identity * 17u) % 240u)
+                        enemy_mode(e, GAME_ENEMY_ATTACK);
+                }
+            } else if (e->mode == GAME_ENEMY_ATTACK) {
+                /* Three authored silhouettes follow the original's independent
+                 * circling and sharper/gentler steering roles. Sprite colors
+                 * remain our original art; these are not ROM trajectories. */
+                if (e->kind == 0u)
+                    e->angle = add_angle(e->angle, e->angular_speed);
+                else {
+                    const int32_t steer =
+                        angle_difference(g->ship_angle, e->angle) / (e->kind == 1u ? 24 : 40);
+                    const int32_t weave = e->kind == 1u ? 150 : 65;
+                    e->angle = add_angle(e->angle, steer + ((e->age / 24u) & 1u ? weave : -weave));
+                }
                 e->radius += 256 + (int32_t)g->cycle * 10;
-                if (e->radius > 126 * 256) {
-                    e->mode = 3;
-                    e->angle = add_angle(e->angle, 8192);
-                }
-            } else {
+                if (e->radius > 130 * 256)
+                    enemy_mode(e, GAME_ENEMY_OUTSIDE_RETURN);
+            } else if (e->mode == GAME_ENEMY_OUTSIDE_RETURN) {
+                /* Leave the circular viewport, curve around, and reappear. The
+                 * enemy remains alive and counts toward completion throughout. */
+                e->angle = add_angle(e->angle, e->angular_speed * 2);
+                if (e->age >= 30u)
+                    enemy_mode(e, GAME_ENEMY_RETURN);
+            } else if (e->mode == GAME_ENEMY_RETURN) {
                 e->radius -= 320;
-                e->angle = add_angle(e->angle, e->angular_speed / 4);
-                if (e->radius <= 32 * 256) {
-                    e->mode = 1;
-                    e->radius = 32 * 256;
+                e->angle = add_angle(e->angle, angle_difference(home_angle, e->angle) / 8);
+                if (e->radius <= home_radius) {
+                    e->radius = home_radius;
+                    if (e->attacks < UINT8_MAX)
+                        ++e->attacks;
+                    enemy_mode(e, GAME_ENEMY_HOLD);
                 }
             }
-            if (e->age > 780u) {
-                e->active = 0;
-                ++g->escaped;
-                continue;
-            }
-            if (e->age > 100u && (e->age + i * 23u) % 240u == 0u)
+            if ((g->entrance_complete || g->planet == 4u) && e->mode == GAME_ENEMY_ATTACK &&
+                e->age % 60u == 30u)
                 fire_shot(g->hostile, GAME_HOSTILE_SHOTS,
                           add_angle(g->ship_angle, (int32_t)(random_word(g) % 1601u) - 800),
                           e->radius);
@@ -421,15 +501,40 @@ static void collisions(game_state *g) {
 }
 static void spawns(game_state *g) {
     const bool chance = g->phase == GAME_CHANCE;
-    const unsigned gap = chance ? 8u : 12u;
-    if (g->spawned < g->stage_target && g->enemy_ticks % gap == 0u) {
-        const unsigned wave = g->spawned / 10u;
-        uint16_t angle = (uint16_t)(wave * 16384u + (g->spawned % 10u) * 1300u + g->planet * 1800u);
-        if (wave & 1u)
-            angle = (uint16_t)(65535u - angle);
-        if (spawn_enemy(g, (uint8_t)((wave + g->planet) % 3u), angle, 4 * 256, chance ? 4 : 0) !=
-            NULL)
+    const unsigned formation = g->spawned / 10u;
+    const unsigned ordinal = g->spawned % 10u;
+    /* Interleave the two branches:0,5,1,6,... Each pair launches on
+     * consecutive bounded updates rather than waiting for the other train. */
+    const unsigned path_planet = formation == 4u ? g->fifth_path_planet : g->planet;
+    const bool single_file = path_planet == 2u || path_planet == 4u;
+    const unsigned member = chance || single_file ? ordinal : ordinal / 2u + (ordinal % 2u) * 5u;
+    const unsigned launch = single_file ? ordinal : ordinal / 2u;
+    /* Reinforcement timing starts when it is selected. Initial survivors may
+     * settle after the old absolute fifth-group deadline has already passed. */
+    const unsigned group_start =
+        formation == 4u ? g->fifth_spawn_tick : formation * GYRUS_GROUP_TICKS;
+    const unsigned scheduled =
+        chance ? (unsigned)g->spawned * 8u + 8u : group_start + launch * GYRUS_MEMBER_TICKS + 1u;
+    if (g->spawned < g->stage_target && g->enemy_ticks >= scheduled) {
+        uint16_t angle;
+        int32_t radius;
+        if (chance) {
+            angle = (uint16_t)(formation * 16384u + member * 1300u + g->planet * 1800u);
+            radius = 4 * 256;
+        } else
+            gyrus_wave_entry(g->planet, (uint8_t)formation, (uint8_t)member,
+                             formation == 4u ? g->fifth_path_planet : g->planet,
+                             formation == 4u ? g->fifth_path_formation : (uint8_t)formation, 0,
+                             &angle, &radius);
+        game_enemy *e = spawn_enemy(g, (uint8_t)((formation + g->planet) % 3u), angle, radius,
+                                    chance ? GAME_ENEMY_ESCAPE : GAME_ENEMY_ENTER);
+        if (e) {
+            const int16_t speed = (int16_t)(170u + (unsigned)g->cycle * 12u + e->kind * 12u);
+            e->formation = (uint8_t)formation;
+            e->member = (uint8_t)member;
+            e->angular_speed = formation & 1u ? (int16_t)-speed : speed;
             ++g->spawned;
+        }
     }
     if (chance)
         return;
@@ -485,7 +590,8 @@ void game_step(game_state *g, const game_input *input) {
         return;
     }
     ++g->tick;
-    ++g->phase_ticks;
+    if (g->phase_ticks < UINT16_MAX)
+        ++g->phase_ticks;
     update_stars_particles(g);
     if (g->phase == GAME_TITLE || g->phase == GAME_OVER)
         return;
@@ -547,6 +653,10 @@ void game_step(game_state *g, const game_input *input) {
         collisions(g);
     } else
         for (unsigned step = 0; step < enemy_steps; ++step) {
+            /* A common multiple of hazard periods preserves cadence indefinitely
+             * without wrapping into the one-shot entrance/satellite schedule. */
+            if (g->enemy_ticks >= 28800u)
+                g->enemy_ticks = 14400u;
             ++g->enemy_ticks;
             spawns(g);
             update_enemies(g);
@@ -565,7 +675,11 @@ void game_step(game_state *g, const game_input *input) {
             any = true;
             break;
         }
-    if (g->spawned >= g->stage_target && !any) {
+    /* Completion requires an accounted resolution for every scheduled plane.
+     * A lost/inactive entity can never silently turn into a successful clear. */
+    if (g->spawned == g->stage_target && !any &&
+        (g->phase == GAME_CHANCE || (g->entrance_complete && g->escaped <= 2u)) &&
+        (unsigned)g->destroyed + g->escaped == g->stage_target) {
         g->clear_chance = g->phase == GAME_CHANCE;
         g->transition_bonus =
             g->clear_chance
@@ -618,6 +732,15 @@ uint32_t game_state_hash(const game_state *g) {
     H(g->fire_rate_remainder);
     H(g->enemy_time_remainder);
     H(g->enemy_ticks);
+    H(g->combat_ticks);
+    H(g->final_escape_ticks);
+    H(g->fifth_spawn_tick);
+    H(g->entrance_complete);
+    H(g->fifth_decided);
+    H(g->fifth_path_planet);
+    H(g->fifth_path_formation);
+    for (unsigned formation = 0; formation < 5u; ++formation)
+        H(g->entrance_kills[formation]);
     for (unsigned i = 0; i < GAME_ENEMIES; ++i) {
         const game_enemy *e = &g->enemies[i];
         H(e->radius);
@@ -628,6 +751,9 @@ uint32_t game_state_hash(const game_state *g) {
         H(e->hp);
         H(e->active);
         H(e->angular_speed);
+        H(e->formation);
+        H(e->member);
+        H(e->attacks);
     }
     for (unsigned i = 0; i < GAME_SHOTS + GAME_HOSTILE_SHOTS; ++i) {
         const game_shot *s = i < GAME_SHOTS ? &g->shots[i] : &g->hostile[i - GAME_SHOTS];

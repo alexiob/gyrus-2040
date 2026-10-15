@@ -1,0 +1,6 @@
+#ifndef ENGINE_DISPLAY_H
+#define ENGINE_DISPLAY_H
+#define ENGINE_WIDTH 240u
+#define ENGINE_HEIGHT 240u
+#define ENGINE_TICK_HZ 60u
+#endif

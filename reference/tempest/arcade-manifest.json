@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "title": "Original Atari Tempest arcade research references",
+  "research_date": "2026-10-16",
+  "scope": "Manuals, contemporary Atari scans and local page renders only. No ROMs, extracted assets, music or game audio.",
+  "files": [
+    {
+      "path": "reference/tempest/arcade/atari-coin-connection-1981-10-p2.pdf",
+      "retrieved_date": "2026-10-16",
+      "bytes": 285359,
+      "sha256": "ac5c8e5bd8fe841a6c5c25528d29f36adad077d3e30723da9e6bea12e4f232ac",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://elibrary.arcade-museum.com/magazines/acc/1981-October-5-06/Atari-Coin-Connection-5-06-1981-10-002.pdf",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/atari-tempest-flyer-1982.jpg",
+      "retrieved_date": "2026-10-16",
+      "bytes": 229148,
+      "sha256": "0646770adcbf380c917fe886b417e8baf3fa04a7a7e4e9d58775e701d28da20a",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://flyers.arcade-museum.com/videogame-flyers/5/tempest-05726-01.jpg",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/atari-tempest-game-specifications-fullscan.pdf",
+      "retrieved_date": "2026-10-16",
+      "bytes": 10079230,
+      "sha256": "b76b18da3b5a8c4a96b16993641681d6b4950e57e2328ccf59ab0d71b46d4266",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/ionpool.net%20%28Dec-31-2020%29/arcade/atari_docs/tempest.pdf",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "retrieved_date": "2026-10-16",
+      "bytes": 1189156,
+      "sha256": "6d3f334b114e50472371f88efc5a9a890340c94b6083d652ccd92ca7cdc4b66f",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/atari-tempest-sales-flyer.jpg",
+      "retrieved_date": "2026-10-16",
+      "bytes": 44093,
+      "sha256": "3a33a0e56dd37576c5a2f5560a2b17960b05c21d0f29bcbc1548ace996592dc2",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Arcade%20by%20Title/Tempest/tempest_flyer.jpg",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/atari-tempest-tm190-first-printing.pdf",
+      "retrieved_date": "2026-10-16",
+      "bytes": 2819196,
+      "sha256": "6c7f95b05b86f4270a3733a2917caef5a17b1bcf34b9b76af6aa9e176fc0378a",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/PDF_Arcade_Atari_Kee/Tempest/Tempest_TM-190_1st_Printing.pdf",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "retrieved_date": "2026-10-16",
+      "bytes": 5720055,
+      "sha256": "266ba0054c3866b15cf8615a00f379f17c161e3d51bdf569b1c9ec4a3056e323",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/atari-tempest-tm190-second-printing.pdf",
+      "retrieved_date": "2026-10-16",
+      "bytes": 3205154,
+      "sha256": "479250703e9c7dd1fddb82ed0fa906c3c0e496518e8f74b030eb8effd8294918",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/PDF_Arcade_Atari_Kee/Tempest/Tempest_TM-190_2nd_Printing.pdf",
+      "kind": "downloaded primary-source scan"
+    },
+    {
+      "path": "reference/tempest/arcade/first-page-24.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 183013,
+      "sha256": "3093d48fb9da8d9a0089350c56c271e0b4c4fd3134b092dcfcd3d34b0f39f1c3",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/PDF_Arcade_Atari_Kee/Tempest/Tempest_TM-190_1st_Printing.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-first-printing.pdf",
+      "pdf_page_1_based": 24,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/first-page-25.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 115907,
+      "sha256": "9e0c00c614534da48e10b9ac75fca399244170dd60393153d2c51b8688b055f3",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/PDF_Arcade_Atari_Kee/Tempest/Tempest_TM-190_1st_Printing.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-first-printing.pdf",
+      "pdf_page_1_based": 25,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/first-page-26.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 60038,
+      "sha256": "7f1c2f4b3659a877000e6255fabd60824b1aa425f7d95d0ddd78017e06519fa7",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/PDF_Arcade_Atari_Kee/Tempest/Tempest_TM-190_1st_Printing.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-first-printing.pdf",
+      "pdf_page_1_based": 26,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-01.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 218727,
+      "sha256": "fed08f8d8b62b86a859625e755e5c2dbc95c1e9be42f913a9e391392616e3daf",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 1,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-02.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 103638,
+      "sha256": "f871bab32a277fc5fa72b331b6d8f3526db4e86e246ab63debfad1dd6630e6bd",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 2,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-18.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 148716,
+      "sha256": "c5ed63488bdc8b354c40450aa3f5db7e19325bf6985543574ad9724fffca355e",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 18,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-19.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 190485,
+      "sha256": "5adc89dc3d7736b92203c5c4ba500a80ad412a17acd888e6426da3ac4f1cf43f",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 19,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-20.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 145276,
+      "sha256": "e0827b1a78c2ee30ec190ab8b73032ad2b14e6298e04d7eb9f5ed333a0994510",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 20,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-21.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 128535,
+      "sha256": "e71ad805712ad20c3bf3c937f1658f2d3869669f5c1d7ac19eca252d2efb65d2",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 21,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-22.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 233313,
+      "sha256": "f3dcf5791cf0bf4b5c3ae8dc5733087159a23f01f00817baf2c674c379a46a8a",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 22,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-23.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 262201,
+      "sha256": "e6259a7adc9c5457d5fee858796245247ee27821681cd495e943a9e06aefedd9",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 23,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/manual-page-24.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 184932,
+      "sha256": "1531d60790db8fe8625e1dc35b661eb2c524cf4bbc9bea43d1f66bc57614386a",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://gauck.com/arcade/Tempest/Tempest.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-tm190-manual.pdf",
+      "pdf_page_1_based": 24,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-1.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 856042,
+      "sha256": "220c76fbbee0b36cf9ad95bc8d30f98c2f2b505525618e5bd0a7328c43cb91c9",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 1,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-2.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 664727,
+      "sha256": "54371f53e33177c41ef956b810612ec0b95d7bb821af5281eda93652e71e84b7",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 2,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-3.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 889861,
+      "sha256": "7499b39e067a143a2a3863c4c6c89b2691678807184a1f8dfbca5910943432f5",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 3,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-4.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 965351,
+      "sha256": "6e5f8b77b86d60e505ad0230d80a4be9b48abb81bd8480abf51dcacd78413ab2",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 4,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-5.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 1163913,
+      "sha256": "9592836d8ef8caec330c368f1b756614f3003009a6705930154f91d38ada0249",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 5,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-6.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 1085981,
+      "sha256": "1b681af8e22373013263ed233b4b2b7b3512a8078c781b272157a18c743779bb",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 6,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-7.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 1119268,
+      "sha256": "fd8fa60d4d25f041916d86bce490368a3f67687465376b576d17d917a974c79d",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 7,
+      "tool": "pdftoppm (Poppler)"
+    },
+    {
+      "path": "reference/tempest/arcade/spec-page-8.png",
+      "retrieved_date": "2026-10-16",
+      "bytes": 977046,
+      "sha256": "92d21831d0b194075b18c6f04585813674714e8a391492db1811c3bbf571fb4d",
+      "license": "Copyright Atari and respective rights holders; no reuse license established. Local research/reference-only; do not ship or redistribute as runtime assets.",
+      "source_url": "https://arcarc.xmission.com/Web%20Archives/Andys%20Arcade%20%28Sep-09-2003%29/arc/atari/tempest/tempest_game_specifications.pdf",
+      "kind": "local PDF-page render for visual inspection",
+      "derived_from": "reference/tempest/arcade/atari-tempest-game-specifications.pdf",
+      "pdf_page_1_based": 8,
+      "tool": "pdftoppm (Poppler)"
+    }
+  ],
+  "recordings": [
+    {
+      "url": "https://www.youtube.com/watch?v=jaFxHIV4Vyk",
+      "title": "Atari Tempest (1981) Arcade Machine - Game Play",
+      "uploader": "The Centre for Computing History",
+      "published_date": "2016-03-13",
+      "consulted_date": "2026-10-16",
+      "downloaded": false,
+      "observations": "Browser visual inspection: exterior at00:20; blue square-like web at01:00. No timing measurement.",
+      "uncertainties": "Physical cabinet claimed by museum uploader; board revision, operator settings and unmodified-ROM status unknown."
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=jfaCrdBABUY",
+      "title": "Tempest (1981) [Arcade]",
+      "uploader": "Sharky's Sharkade",
+      "published_date": "2017-09-02",
+      "consulted_date": "2026-10-16",
+      "downloaded": false,
+      "observations": "Search metadata only; not watched frame by frame.",
+      "uncertainties": "Emulator/cabinet, revision and operator settings unknown."
+    }
+  ],
+  "secondary_crosschecks": [
+    {
+      "url": "https://www.gamesdatabase.org/game/arcade/tempest.aspx",
+      "purpose": "Conventional sixteen-shape names/order; provisional topology remains authored."
+    },
+    {
+      "url": "https://www.arcade-museum.com/Videogame/tempest",
+      "purpose": "Open ends, rim-flipper clear exception, spike-dive hazard; not ROM timing evidence."
+    }
+  ]
+}

@@ -110,6 +110,18 @@ int main(void) {
     request(&protocol, "G1 33 RESET 123\n");
     assert(game.settings.fire_rate == 5 && game.settings.enemy_speed_percent == 100 &&
            game.settings.tilt_sensitivity_percent == 100 && !game.pause_settings);
+    request(&protocol, "G1 34 SET clear_stage 1\n");
+    assert(strstr(output, "\"ok\":false")); /* Title cannot be completed. */
+    request(&protocol, "G1 35 LEVEL 1\n");
+    request(&protocol, "G1 36 STEP 100\n");
+    request(&protocol, "G1 37 SET clear_stage 0\n");
+    assert(strstr(output, "\"ok\":false"));
+    request(&protocol, "G1 38 SET clear_stage 1\n");
+    assert(strstr(output, "\"ok\":true"));
+    request(&protocol, "G1 39 STEP 1\n");
+    assert(game.phase == GAME_CLEAR);
+    request(&protocol, "G1 40 STATE\n");
+    assert(strstr(output, "\"destroyed\":40") && strstr(output, "\"escaped\":0"));
     puts("game debug adapter tests passed");
     return 0;
 }

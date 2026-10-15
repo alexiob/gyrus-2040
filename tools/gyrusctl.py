@@ -115,7 +115,7 @@ def main() -> int:
     parser.add_argument('--baud', type=int, default=115200)
     parser.add_argument('--output', '-o', type=Path, help='PNG destination for FRAME (default capture.png)')
     parser.add_argument('--batch', type=Path, help='file of commands, one per line; # comments allowed')
-    parser.add_argument('command', nargs='*', help='HELLO, STATE, INPUT key=value..., STEP n, SET key n, LEVEL n, RESET seed, PAUSE, RESUME, FRAME')
+    parser.add_argument('command', nargs='*', help='HELLO, STATE, INPUT key=value..., STEP n, SET key n, LEVEL n, RESET seed, PAUSE, RESUME, GAMES, GAME gyrus|tempest, HOME, FRAME')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('--timeout must be positive')

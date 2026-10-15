@@ -1,9 +1,7 @@
 /* macOS Metal/Sokol host. The simulator and G1 socket run on the UI thread. */
 #define SOKOL_IMPL
 #define SOKOL_METAL
-#include "gyrus/assets.h"
-#include "gyrus/controls.h"
-#include "gyrus/debug_game.h"
+#include "engine/debug_session.h"
 #include "sokol_app.h"
 #include "sokol_gfx.h"
 #include "sokol_glue.h"
@@ -21,12 +19,11 @@
 #include <unistd.h>
 
 static struct {
-    game_state game;
-    controls_state controls;
-    gyrus_debug_game adapter;
+    engine_state engine;
+    engine_debug_session adapter;
     gyrus_debug protocol;
-    uint8_t indexed[GAME_WIDTH * GAME_HEIGHT];
-    uint32_t rgba[GAME_WIDTH * GAME_HEIGHT];
+    uint8_t indexed[ENGINE_WIDTH * ENGINE_HEIGHT];
+    uint32_t rgba[ENGINE_WIDTH * ENGINE_HEIGHT];
     sg_image image;
     sg_view view;
     sg_sampler sampler;
@@ -37,7 +34,8 @@ static struct {
     float mouse_x, mouse_y;
     int32_t bank_mdeg;
     bool tilt_left, tilt_right;
-    bool touch, fire, left, right, start, pause, quit;
+    bool touch, fire, left, right, start, pause, quit, special;
+    int8_t navigate;
 } app;
 
 static void logger(const char *tag, uint32_t level, uint32_t item, const char *message,
@@ -123,7 +121,7 @@ static void poll_socket(void) {
             int yes = 1;
             setsockopt(app.client, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof yes);
             fcntl(app.client, F_SETFL, O_NONBLOCK);
-            gyrus_debug_callbacks callbacks = gyrus_debug_game_callbacks(&app.adapter);
+            gyrus_debug_callbacks callbacks = engine_debug_session_callbacks(&app.adapter);
             gyrus_debug_init(&app.protocol, &callbacks);
         }
     }
@@ -153,21 +151,6 @@ static void poll_socket(void) {
         }
     }
 }
-static controls_screen current_screen(void) {
-    if (app.game.pause_settings && (app.game.phase == GAME_TITLE || app.game.phase == GAME_OVER ||
-                                    app.game.phase == GAME_PAUSED))
-        return CONTROLS_SETTINGS;
-    switch (app.game.phase) {
-    case GAME_TITLE:
-        return CONTROLS_TITLE;
-    case GAME_PAUSED:
-        return CONTROLS_PAUSE;
-    case GAME_OVER:
-        return CONTROLS_GAME_OVER;
-    default:
-        return CONTROLS_PLAY;
-    }
-}
 static void viewport(int *x, int *y, int *size) {
     int w = sapp_width(), h = sapp_height();
     *size = w < h ? w : h;
@@ -180,11 +163,13 @@ static void simulate(void) {
 
     int tx = size ? (int)((app.mouse_x - (float)x) * 240.0f / (float)size) : -1;
     int ty = size ? (int)((app.mouse_y - (float)y) * 240.0f / (float)size) : -1;
+    bool touch_inside = tx >= 0 && tx < 240 && ty >= 0 && ty < 240;
     controls_sample sample = {.now_ms = (uint32_t)(app.clock * 1000.0),
-                              .touch_pressed =
-                                  app.touch && tx >= 0 && tx < 240 && ty >= 0 && ty < 240,
-                              .touch_x = (uint16_t)(tx >= 0 ? tx : 0),
-                              .touch_y = (uint16_t)(ty >= 0 ? ty : 0),
+                              .touch_pressed = app.touch,
+                              /* Leaving the display cancels this contact, not a release. */
+                              .touch_invalid = app.touch && !touch_inside,
+                              .touch_x = (uint16_t)(touch_inside ? tx : 0),
+                              .touch_y = (uint16_t)(touch_inside ? ty : 0),
                               .fire_pressed = app.fire};
     /* Supply a complete, physically consistent virtual IMU sample at 60 Hz. */
     int32_t previous_bank = app.bank_mdeg;
@@ -204,39 +189,16 @@ static void simulate(void) {
     sample.motion.accel_mg[0] = (int32_t)lround(sin(radians) * 1000.0);
     sample.motion.accel_mg[2] = (int32_t)lround(cos(radians) * 1000.0);
     sample.motion.gyro_mdps[1] = -(app.bank_mdeg - previous_bank) * 60;
-    sample.tilt_sensitivity_percent = app.game.settings.tilt_sensitivity_percent;
-    controls_output local = controls_update(&app.controls, sample, current_screen());
-    if (local.reboot_requested) {
-        game_init(&app.game, app.seed);
-        controls_init(&app.controls);
-    }
-    app.game.control_mode = (uint8_t)app.controls.mode;
-    app.game.reboot_progress = controls_reboot_progress(&app.controls, sample.now_ms);
-    app.game.tilt_ready = controls_tilt_ready(&app.controls);
-    app.game.tilt_progress = controls_tilt_progress(&app.controls, sample.now_ms);
-    app.game.tilt_preview = controls_tilt_preview(&app.controls);
-    game_input retained = app.adapter.input;
-    game_input *input = &app.adapter.input;
-    if (app.left != app.right)
-        input->turn = app.right ? 1 : -1;
-    else if (local.input.turn)
-        input->turn = local.input.turn;
-    if (local.input.angle_delta)
-        input->angle_delta = local.input.angle_delta;
-    input->fire = input->fire || local.input.fire;
-    input->start = input->start || local.input.start || app.start;
-    input->pause = input->pause || local.input.pause || app.pause;
-    input->quit = input->quit || local.input.quit || app.quit;
-    if (local.input.menu_action != GAME_MENU_NONE)
-        input->menu_action = local.input.menu_action;
-    if (!app.adapter.frozen)
-        gyrus_debug_game_tick(&app.adapter);
-    /* Persistent injected controls remain until replaced; edge actions are pulses. */
-    app.adapter.input.turn = retained.turn;
-    app.adapter.input.fire = retained.fire;
-    if (app.adapter.frozen)
-        app.adapter.input = retained;
-    app.start = app.pause = app.quit = false;
+    engine_input keyboard = {.turn = app.left == app.right ? 0 : (app.right ? 1 : -1),
+                             .start = app.start,
+                             .pause = app.pause,
+                             .quit = app.quit,
+                             .special = app.special,
+                             .navigate = app.navigate};
+    if (engine_update(&app.engine, sample, &keyboard))
+        engine_init(&app.engine, app.seed);
+    app.start = app.pause = app.quit = app.special = false;
+    app.navigate = 0;
 }
 static void init(void) {
     sg_setup(&(sg_desc){.environment = sglue_environment(), .logger.func = logger});
@@ -251,10 +213,8 @@ static void init(void) {
                                                      .mag_filter = SG_FILTER_NEAREST,
                                                      .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
                                                      .wrap_v = SG_WRAP_CLAMP_TO_EDGE});
-    game_init(&app.game, app.seed);
-    controls_init(&app.controls);
-    gyrus_debug_game_init(&app.adapter, &app.game, app.indexed, write_socket, NULL);
-    app.adapter.controls = &app.controls;
+    engine_init(&app.engine, app.seed);
+    engine_debug_session_init(&app.adapter, &app.engine, app.indexed, write_socket, NULL);
     setup_socket();
 }
 static void frame(void) {
@@ -268,9 +228,9 @@ static void frame(void) {
         simulate();
         app.accumulator -= 1.0 / 60.0;
     }
-    game_render(&app.game, app.indexed);
-    for (size_t i = 0; i < GAME_WIDTH * GAME_HEIGHT; i++) {
-        uint16_t p = gyrus_palette[app.indexed[i]];
+    const uint16_t *palette = engine_render(&app.engine, app.indexed);
+    for (size_t i = 0; i < ENGINE_WIDTH * ENGINE_HEIGHT; i++) {
+        uint16_t p = palette[app.indexed[i]];
         uint32_t r = (p >> 11) & 31u, g = (p >> 5) & 63u, b = p & 31u;
         r = (r << 3) | (r >> 2);
         g = (g << 2) | (g >> 4);
@@ -310,17 +270,28 @@ static void event(const sapp_event *e) {
         app.touch = false;
     if (e->type == SAPP_EVENTTYPE_UNFOCUSED) {
         app.touch = app.fire = app.left = app.right = app.tilt_left = app.tilt_right = false;
+        app.start = app.pause = app.quit = app.special = false;
+        app.navigate = 0;
+        controls_cancel_touch(&app.engine.controls);
     }
     if (e->type == SAPP_EVENTTYPE_KEY_DOWN || e->type == SAPP_EVENTTYPE_KEY_UP) {
         bool down = e->type == SAPP_EVENTTYPE_KEY_DOWN;
         switch (e->key_code) {
         case SAPP_KEYCODE_LEFT:
         case SAPP_KEYCODE_A:
-            app.left = down;
+            app.left = down && !app.engine.hub;
+            if (down && !e->key_repeat && app.engine.hub)
+                app.navigate = -1;
             break;
         case SAPP_KEYCODE_RIGHT:
         case SAPP_KEYCODE_D:
-            app.right = down;
+            app.right = down && !app.engine.hub;
+            if (down && !e->key_repeat && app.engine.hub)
+                app.navigate = 1;
+            break;
+        case SAPP_KEYCODE_Z:
+            if (down && !e->key_repeat)
+                app.special = true;
             break;
         case SAPP_KEYCODE_SPACE:
             app.fire = down;
@@ -343,14 +314,14 @@ static void event(const sapp_event *e) {
         case SAPP_KEYCODE_K:
             if (down && !e->key_repeat) {
                 app.bank_mdeg = 0;
-                controls_tilt_reset(&app.controls);
+                controls_tilt_reset(&app.engine.controls);
             }
             break;
         case SAPP_KEYCODE_M:
             if (down && !e->key_repeat)
-                controls_set_mode(
-                    &app.controls,
-                    (controls_mode)(((unsigned)app.controls.mode + 1u) % CONTROLS_MODE_COUNT));
+                controls_set_mode(&app.engine.controls,
+                                  (controls_mode)(((unsigned)app.engine.controls.mode + 1u) %
+                                                  CONTROLS_MODE_COUNT));
             break;
         default:
             break;
@@ -388,16 +359,16 @@ sapp_desc sokol_main(int argc, char **argv) {
             exit(2);
         }
     }
-    return (sapp_desc){.init_cb = init,
-                       .frame_cb = frame,
-                       .event_cb = event,
-                       .cleanup_cb = cleanup,
-                       .width = 720,
-                       .height = 720,
-                       .window_title =
-                           "Gyrus 2040 — arrows/touch, J/L tilt, 0 calibrate, M mode, Space fire",
-                       .high_dpi = true,
-                       .sample_count = 1,
-                       .logger.func = logger,
-                       .ios = {.keyboard_resizes_canvas = false}};
+    return (sapp_desc){
+        .init_cb = init,
+        .frame_cb = frame,
+        .event_cb = event,
+        .cleanup_cb = cleanup,
+        .width = 720,
+        .height = 720,
+        .window_title = "Round Arcade — arrows/touch, Enter play, J/L tilt, Z special, Esc pause",
+        .high_dpi = true,
+        .sample_count = 1,
+        .logger.func = logger,
+        .ios = {.keyboard_resizes_canvas = false}};
 }

@@ -57,7 +57,7 @@ int main(void) {
     f.pixels[2] = 1;
     f.pixels[3] = 0;
     gyrus_debug d;
-    gyrus_debug_callbacks cb = {&f, write_bytes, state, set, action, input, frame};
+    gyrus_debug_callbacks cb = {&f, write_bytes, state, set, action, input, frame, NULL};
     gyrus_debug_init(&d, &cb);
     request(&d, &f, "G1 1 HELLO\n");
     assert(strstr((char *)f.out, "\"id\":1,\"ok\":true"));
@@ -71,7 +71,16 @@ int main(void) {
     assert(f.input.mask == (GYRUS_INPUT_TURN | GYRUS_INPUT_ANGLE | GYRUS_INPUT_FIRE));
     request(&d, &f, "G1 11 INPUT menu=8\n");
     assert(f.input.mask == GYRUS_INPUT_MENU && f.input.menu_action == 8);
-    request(&d, &f, "G1 11 INPUT menu=9\n");
+    request(&d, &f, "G1 11 INPUT menu=9 special=1 home=0 navigate=-1\n");
+    assert(f.input.mask ==
+           (GYRUS_INPUT_MENU | GYRUS_INPUT_SPECIAL | GYRUS_INPUT_HOME | GYRUS_INPUT_NAVIGATE));
+    assert(f.input.menu_action == 9 && f.input.special && !f.input.home && f.input.navigate == -1);
+    gyrus_debug_input before = f.input;
+    request(&d, &f, "G1 11 INPUT special=1 navigate=2\n");
+    assert(strstr((char *)f.out, "\"ok\":false") && !memcmp(&before, &f.input, sizeof before));
+    request(&d, &f, "G1 11 INPUT home=1 home=0\n");
+    assert(strstr((char *)f.out, "\"ok\":false"));
+    request(&d, &f, "G1 11 INPUT menu=10\n");
     assert(strstr((char *)f.out, "\"ok\":false"));
     request(&d, &f, "G1 11 INPUT menu=-1\n");
     assert(strstr((char *)f.out, "\"ok\":false"));

@@ -35,6 +35,22 @@ int main(void) {
             assert(video_expand_strip(frame, strip, full, storage, 1) == 0);
         }
     }
+    /* A queued frame must expand with its own palette after a game switch. */
+    uint16_t first[256], next[256];
+    for (unsigned i = 0; i < 256; ++i) {
+        first[i] = (uint16_t)(i + 100);
+        next[i] = (uint16_t)(i + 200);
+    }
+    const uint16_t *queued_palette = first;
+    const uint16_t *active_palette = next;
+    size_t count =
+        video_expand_strip_palette(frame, queued_palette, 0, true, storage, VIDEO_STRIP_PIXELS);
+    assert(count == VIDEO_STRIP_PIXELS);
+    for (size_t i = 0; i < count; ++i) {
+        assert(storage[i] == first[frame[i]]);
+        assert(storage[i] != active_palette[frame[i]]);
+    }
+    assert(!video_expand_strip_palette(frame, NULL, 0, true, storage, VIDEO_STRIP_PIXELS));
     assert(optimized_pixels < 50000);
     assert(video_strip_span(VIDEO_STRIPS, false).width == 0);
     assert(video_expand_strip(frame, VIDEO_STRIPS, false, storage, VIDEO_STRIP_PIXELS) == 0);

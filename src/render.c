@@ -1,6 +1,8 @@
 #include "gyrus/assets.h"
 #include "gyrus/controls.h"
 #include "gyrus/game.h"
+#include "engine/draw.h"
+#include "engine/ui.h"
 #include <string.h>
 
 enum {
@@ -20,69 +22,14 @@ enum {
     YELLOW = GYRUS_COLOR_YELLOW
 };
 
-static void pixel(uint8_t *fb, int x, int y, uint8_t color) {
-    if ((unsigned)x < GAME_WIDTH && (unsigned)y < GAME_HEIGHT)
-        fb[(unsigned)y * GAME_WIDTH + (unsigned)x] = color;
-}
-static void fill(uint8_t *fb, int x, int y, int width, int height, uint8_t color) {
-    for (int yy = y; yy < y + height; ++yy)
-        for (int xx = x; xx < x + width; ++xx)
-            pixel(fb, xx, yy, color);
-}
-static void line(uint8_t *fb, int x0, int y0, int x1, int y1, uint8_t color) {
-    const int dx = x1 > x0 ? x1 - x0 : x0 - x1;
-    const int dy = y1 > y0 ? y0 - y1 : y1 - y0;
-    const int sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
-    int error = dx + dy;
-    for (;;) {
-        pixel(fb, x0, y0, color);
-        if (x0 == x1 && y0 == y1)
-            break;
-        const int twice = 2 * error;
-        if (twice >= dy) {
-            error += dy;
-            x0 += sx;
-        }
-        if (twice <= dx) {
-            error += dx;
-            y0 += sy;
-        }
-    }
-}
-static int text_width(const char *string, int scale) {
-    int count = 0;
-    while (*string != '\0') {
-        ++count;
-        ++string;
-    }
-    return count > 0 ? (count * 6 - 1) * scale : 0;
-}
-static void label(uint8_t *fb, const char *string, int x, int y, uint8_t color, int scale) {
-    while (*string != '\0') {
-        const uint8_t *glyph = gyrus_glyph(*string++);
-        for (unsigned row = 0; row < 7u; ++row)
-            for (unsigned col = 0; col < 5u; ++col)
-                if ((glyph[row] & (1u << (4u - col))) != 0u)
-                    fill(fb, x + (int)col * scale, y + (int)row * scale, scale, scale, color);
-        x += 6 * scale;
-    }
-}
-static void centered(uint8_t *fb, const char *string, int y, uint8_t color, int scale) {
-    label(fb, string, 120 - text_width(string, scale) / 2, y, color, scale);
-}
-static void decimal(char result[11], uint32_t number, unsigned digits) {
-    char reversed[10];
-    unsigned used = 0;
-    do {
-        reversed[used++] = (char)('0' + number % 10u);
-        number /= 10u;
-    } while (number != 0u && used < 10u);
-    while (used < digits && used < 10u)
-        reversed[used++] = '0';
-    for (unsigned i = 0; i < used; ++i)
-        result[i] = reversed[used - 1u - i];
-    result[used] = '\0';
-}
+#define pixel draw_pixel
+#define fill draw_fill
+#define line draw_line
+#define text_width draw_text_width
+#define label draw_label
+#define centered draw_centered
+#define decimal draw_decimal
+
 static void sprite_scaled(uint8_t *fb, gyrus_sprite_id id, unsigned frame, int cx, int cy,
                           int scale) {
     const gyrus_asset *asset = gyrus_sprite(id, frame);
@@ -199,44 +146,6 @@ static void button(uint8_t *fb, int x0, int y0, int x1, int y1, const char *word
     line(fb, x1 - 1, y1 - 6, x1 - 1, y1 - 1, color);
     label(fb, word, (x0 + x1 - text_width(word, scale)) / 2, (y0 + y1 - 7 * scale) / 2, color,
           scale);
-}
-static const char *mode_name(const game_state *g) {
-    if (g->control_mode == (uint8_t)CONTROLS_TILT)
-        return "TILT";
-    return g->control_mode == (uint8_t)CONTROLS_RELATIVE_DRAG ? "BORDER DRAG" : "LEFT / RIGHT";
-}
-static void settings_mode(const game_state *g, uint8_t *fb) {
-    const int y0 = (int)CONTROLS_SETTINGS_MODE_Y0;
-    const int y1 = (int)CONTROLS_SETTINGS_MODE_Y1;
-    const bool tilt = g->control_mode == (uint8_t)CONTROLS_TILT;
-    centered(fb,
-             tilt ? (g->tilt_ready ? "TILT READY - BANK TO TEST" : "HOLD STILL TO CENTRE")
-                  : "STEERING",
-             42, STEEL, 1);
-    button(fb, (int)CONTROLS_SETTINGS_MODE_X0, y0, (int)CONTROLS_SETTINGS_MODE_X1, y1, mode_name(g),
-           CYAN, 1);
-    label(fb, "<", (int)CONTROLS_SETTINGS_MODE_X0 + 6, (y0 + y1 - 7) / 2, STEEL, 1);
-    label(fb, ">", (int)CONTROLS_SETTINGS_MODE_X1 - 11, (y0 + y1 - 7) / 2, STEEL, 1);
-    if (tilt) {
-        const int bar_y = y1 - 5;
-        fill(fb, 84, bar_y, 72, 2, DARK);
-        if (g->tilt_ready) {
-            int preview = g->tilt_preview;
-            if (preview < -1000)
-                preview = -1000;
-            if (preview > 1000)
-                preview = 1000;
-            const int marker = 120 + preview * 32 / 1000;
-            fill(fb, 116, bar_y - 2, 9, 5, DEEP_BLUE);
-            line(fb, 120, bar_y, marker, bar_y, CYAN);
-            fill(fb, marker - 1, bar_y - 2, 3, 5, marker >= 117 && marker <= 123 ? GREEN : CYAN);
-            label(fb, "L", 72, y1 - 8, STEEL, 1);
-            label(fb, "R", 163, y1 - 8, STEEL, 1);
-        } else {
-            const unsigned progress = g->tilt_progress > 1000u ? 1000u : g->tilt_progress;
-            fill(fb, 84, bar_y, (int)(progress * 72u / 1000u), 2, AMBER);
-        }
-    }
 }
 static void title(const game_state *g, uint8_t *fb, bool over) {
     char number[11];
@@ -504,74 +413,11 @@ static void travelling_ship(const game_state *g, uint8_t *fb, game_phase phase) 
     game_polar(g->ship_angle, radius, &x, &y);
     sprite_resized(fb, GYRUS_SPRITE_PLAYER, ((unsigned)g->ship_angle + 32768u) >> 11u, x, y, width);
 }
-typedef struct {
-    int x0, y0, x1, y1;
-} settings_rect;
-static void settings_row(uint8_t *fb, const char *name, uint32_t value, const char *unit,
-                         int label_y, settings_rect down, settings_rect up, uint32_t minimum,
-                         uint32_t maximum) {
-    char number[11];
-    char display[14];
-    decimal(number, value, 1);
-    size_t length = strlen(number);
-    memcpy(display, number, length);
-    for (size_t i = 0; unit[i] != '\0' && length + 1u < sizeof display; ++i)
-        display[length++] = unit[i];
-    display[length] = '\0';
-    centered(fb, name, label_y, STEEL, 1);
-    button(fb, down.x0, down.y0, down.x1, down.y1, "-", value <= minimum ? STEEL : CYAN, 2);
-    button(fb, up.x0, up.y0, up.x1, up.y1, "+", value >= maximum ? STEEL : CYAN, 2);
-    centered(fb, display, (down.y0 + down.y1 - 14) / 2, IVORY, 2);
-}
-static void settings_page(const game_state *g, uint8_t *fb) {
-    static const settings_rect rows[3][2] = {
-        {{(int)CONTROLS_FIRE_DOWN_X0, (int)CONTROLS_FIRE_DOWN_Y0, (int)CONTROLS_FIRE_DOWN_X1,
-          (int)CONTROLS_FIRE_DOWN_Y1},
-         {(int)CONTROLS_FIRE_UP_X0, (int)CONTROLS_FIRE_UP_Y0, (int)CONTROLS_FIRE_UP_X1,
-          (int)CONTROLS_FIRE_UP_Y1}},
-        {{(int)CONTROLS_ENEMY_DOWN_X0, (int)CONTROLS_ENEMY_DOWN_Y0, (int)CONTROLS_ENEMY_DOWN_X1,
-          (int)CONTROLS_ENEMY_DOWN_Y1},
-         {(int)CONTROLS_ENEMY_UP_X0, (int)CONTROLS_ENEMY_UP_Y0, (int)CONTROLS_ENEMY_UP_X1,
-          (int)CONTROLS_ENEMY_UP_Y1}},
-        {{(int)CONTROLS_TILT_DOWN_X0, (int)CONTROLS_TILT_DOWN_Y0, (int)CONTROLS_TILT_DOWN_X1,
-          (int)CONTROLS_TILT_DOWN_Y1},
-         {(int)CONTROLS_TILT_UP_X0, (int)CONTROLS_TILT_UP_Y0, (int)CONTROLS_TILT_UP_X1,
-          (int)CONTROLS_TILT_UP_Y1}},
-    };
-    centered(fb, "SETTINGS", 21, IVORY, 2);
-    settings_mode(g, fb);
-    settings_row(fb, "FIRE RATE", g->settings.fire_rate, "/S", 83, rows[0][0], rows[0][1], 1, 10);
-    settings_row(fb, "ENEMY SPEED", g->settings.enemy_speed_percent, "%", 126, rows[1][0],
-                 rows[1][1], 25, 200);
-    settings_row(fb, "TILT SENS", g->settings.tilt_sensitivity_percent, "%", 169, rows[2][0],
-                 rows[2][1], 50, 200);
-    button(fb, (int)CONTROLS_BACK_X0, (int)CONTROLS_BACK_Y0, (int)CONTROLS_BACK_X1,
-           (int)CONTROLS_BACK_Y1, "BACK", CYAN, 2);
-}
-static void pause_menu(const game_state *g, uint8_t *fb) {
-    static const uint8_t dim[GYRUS_COLOR_COUNT] = {
-        BLACK, DARK, DARK, DEEP_BLUE, DEEP_BLUE, DEEP_BLUE, DARK,      DARK,
-        DARK,  DARK, DARK, DEEP_BLUE, DARK,      DARK,      DEEP_BLUE, DARK,
-        BLACK, DARK, DARK, DARK,      DARK,      DARK,      DARK,      DEEP_BLUE};
-    for (unsigned i = 0; i < GAME_WIDTH * GAME_HEIGHT; ++i)
-        fb[i] = fb[i] < GYRUS_COLOR_COUNT ? dim[fb[i]] : BLACK;
-    fill(fb, 35, 27, 170, 207, BLACK);
-    centered(fb, "PAUSED", 38, IVORY, 2);
-    centered(fb, "FLIGHT ON HOLD", 61, STEEL, 1);
-    button(fb, (int)CONTROLS_RESUME_X0, (int)CONTROLS_RESUME_Y0, (int)CONTROLS_RESUME_X1,
-           (int)CONTROLS_RESUME_Y1, "RESUME", CYAN, 2);
-    button(fb, (int)CONTROLS_SETTINGS_X0, (int)CONTROLS_SETTINGS_Y0, (int)CONTROLS_SETTINGS_X1,
-           (int)CONTROLS_SETTINGS_Y1, "SETTINGS", IVORY, 2);
-    button(fb, (int)CONTROLS_QUIT_X0, (int)CONTROLS_QUIT_Y0, (int)CONTROLS_QUIT_X1,
-           (int)CONTROLS_QUIT_Y1, "QUIT", IVORY, 2);
-    button(fb, (int)CONTROLS_REBOOT_X0, (int)CONTROLS_REBOOT_Y0, (int)CONTROLS_REBOOT_X1,
-           (int)CONTROLS_REBOOT_Y1, "REBOOT HOLD 5S", AMBER, 1);
-    const unsigned progress = g->reboot_progress > 1000u ? 1000u : g->reboot_progress;
-    if (progress > 0u) {
-        const int width = (int)(progress * (CONTROLS_REBOOT_X1 - CONTROLS_REBOOT_X0 - 4u) / 1000u);
-        fill(fb, (int)CONTROLS_REBOOT_X0 + 2, (int)CONTROLS_REBOOT_Y1 - 4, width, 2, AMBER);
-    }
-    centered(fb, "BOOT ALSO RESUMES", 219, STEEL, 1);
+static engine_menu_view menu_view(const game_state *g, bool settings) {
+    return (engine_menu_view){.settings = settings, .values = g->settings,
+        .ui = {.control_mode = g->control_mode, .reboot_progress = g->reboot_progress,
+               .tilt_ready = g->tilt_ready, .tilt_progress = g->tilt_progress,
+               .tilt_preview = g->tilt_preview}};
 }
 void game_render(const game_state *g, uint8_t framebuffer[GAME_WIDTH * GAME_HEIGHT]) {
     const game_phase scene = g->phase == GAME_PAUSED ? g->resume_phase : g->phase;
@@ -582,8 +428,8 @@ void game_render(const game_state *g, uint8_t framebuffer[GAME_WIDTH * GAME_HEIG
         stars(g, framebuffer, scene == GAME_INTRO);
     if (g->pause_settings &&
         (g->phase == GAME_TITLE || g->phase == GAME_OVER || g->phase == GAME_PAUSED)) {
-        fill(framebuffer, 35, 15, 170, 219, BLACK);
-        settings_page(g, framebuffer);
+        const engine_menu_view view = menu_view(g, true);
+        engine_ui_menu(&view, framebuffer);
     } else if (g->phase == GAME_TITLE || g->phase == GAME_OVER) {
         title(g, framebuffer, g->phase == GAME_OVER);
     } else {
@@ -612,13 +458,10 @@ void game_render(const game_state *g, uint8_t framebuffer[GAME_WIDTH * GAME_HEIG
             travelling_ship(g, framebuffer, scene);
         else if (scene == GAME_PLAY || scene == GAME_CHANCE || scene == GAME_CLEAR)
             ship(g, framebuffer); /* Foreground priority over HUD and messages. */
-        if (g->phase == GAME_PAUSED)
-            pause_menu(g, framebuffer);
+        if (g->phase == GAME_PAUSED) {
+            const engine_menu_view view = menu_view(g, false);
+            engine_ui_menu(&view, framebuffer);
+        }
     }
-    /* A round LCD hides these pixels physically. Masking also makes host captures
-       show the exact playable aperture and prevents corner-only HUD content. */
-    for (int y = 0; y < 240; ++y)
-        for (int x = 0; x < 240; ++x)
-            if ((x - 120) * (x - 120) + (y - 120) * (y - 120) > 120 * 120)
-                framebuffer[(unsigned)y * GAME_WIDTH + (unsigned)x] = BLACK;
+    draw_mask_round(framebuffer);
 }

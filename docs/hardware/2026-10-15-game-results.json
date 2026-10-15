@@ -2,7 +2,7 @@
   "date": "2026-10-15",
   "board_serial": "E463985803302D34",
   "firmware": "gyrus_game 0.2.0",
-  "uf2_sha256": "3e68a456119d76bbf9e8c8cc6cf32590f9ade542becf2dfa6e0bab99ad06e332",
+  "uf2_sha256": "8c083dace9c32e745cdde6e2d1d0c9635d7bd7fd79024e392b1d23c49866cf64",
   "toolchain": "Arm GNU15.3.Rel2 GCC15.3.1",
   "pico_sdk": "2.3.1",
   "tests": {
@@ -29,50 +29,50 @@
         "name": "intro",
         "stage": 1,
         "hash": 2823161518,
-        "frame_crc32": 3256473582
+        "frame_crc32": 1085144012
       },
       {
         "name": "combat",
-        "stage": 2,
-        "hash": 3408895811,
-        "frame_crc32": 3948330580
+        "stage": 1,
+        "hash": 1627911709,
+        "frame_crc32": 237407368
       },
       {
         "name": "chance",
         "stage": 3,
-        "hash": 3968372475,
-        "frame_crc32": 1971949743
+        "hash": 3617169227,
+        "frame_crc32": 2394075010
       },
       {
         "name": "lasers",
         "stage": 6,
-        "hash": 1624392114,
-        "frame_crc32": 1533701835
+        "hash": 3113148771,
+        "frame_crc32": 3492329601
       },
       {
         "name": "earth",
         "stage": 23,
-        "hash": 1222964593,
-        "frame_crc32": 3251133236
+        "hash": 1665451114,
+        "frame_crc32": 3357350100
       },
       {
         "name": "next-route",
-        "stage": 25,
-        "hash": 3524065122,
-        "frame_crc32": 2364145594
+        "stage": 24,
+        "hash": 2485598051,
+        "frame_crc32": 2829532450
       },
       {
         "name": "menu",
-        "stage": 25,
-        "hash": 2255308111,
-        "frame_crc32": 4190770426
+        "stage": 24,
+        "hash": 3576628682,
+        "frame_crc32": 1532144541
       }
     ]
   },
   "device_native_frame_equality": true,
   "performance": {
-    "seconds": 10.32431870799337,
-    "fps": 60.05238868885159,
+    "seconds": 5.334848708997015,
+    "fps": 59.98295686629922,
     "drops": 0,
     "sim_overruns": 0,
     "touch_read_decode_failures": 0,
@@ -84,38 +84,37 @@
       "spi_hz": 62500000,
       "display_disabled": false,
       "display_errors": 0,
-      "rendered_frames": 966,
-      "presented_frames": 965,
-      "dropped_frames": 0,
-      "render_us": 7367,
-      "render_max_us": 7686,
-      "last_present_us": 14379,
-      "max_present_us": 17174,
-      "sim_max_us": 1130,
-      "touch_errors": 0,
-      "touch_irq": 7,
+      "rendered_frames": 3744,
+      "presented_frames": 3743,
+      "dropped_frames": 21,
+      "render_us": 7352,
+      "render_max_us": 16475,
+      "last_present_us": 14353,
+      "max_present_us": 17119,
+      "sim_max_us": 1152,
+      "touch_errors": 6,
+      "touch_irq": 414,
       "bootsel_read_failures": 0,
-      "sim_overruns": 3,
+      "sim_overruns": 9,
       "control_mode": 0,
       "imu_ok": true,
       "imu_revision": 124,
-      "motion_age_ms": 9,
+      "motion_age_ms": 8,
       "accel_mg": [
-        -187,
-        850,
-        -539
+        62,
+        483,
+        -881
       ],
       "gyro_mdps": [
-        -1656,
-        -2765,
-        62
+        -2171,
+        -1875,
+        140
       ]
     },
-    "phase_last": "title",
-    "tilt_ready": false
+    "phase_last": "title"
   },
   "memory": {
-    "elf_text_bytes": 128992,
+    "elf_text_bytes": 129336,
     "elf_bss_bytes": 141544,
     "indexed_frames_bytes": 115200,
     "rgb565_strips_bytes": 15360,
@@ -132,7 +131,7 @@
     "boot_fire": true,
     "pause_resume_mode_quit": true,
     "autofire": true,
-    "tilt": "awaiting user feedback",
+    "tilt": "calibration and motion response observed; human direction feedback pending",
     "five_second_reboot": "not physically tested"
   },
   "limits": [
@@ -141,5 +140,61 @@
     "Short idle performance observation; not a thermal or battery endurance test.",
     "After display transfer fault the game latches display disabled, retaining USB diagnostics.",
     "IMU-axis direction and five-second reboot require physical acceptance."
-  ]
+  ],
+  "tilt_hardware_test": {
+    "seconds": 10.671285624994198,
+    "fps": 60.067739026556936,
+    "drops": 0,
+    "sim_overruns": 0,
+    "touch_read_decode_failures": 0,
+    "spi_errors": 0,
+    "hardware_last": {
+      "firmware": "gyrus_game",
+      "cpu_hz": 125000000,
+      "peri_hz": 125000000,
+      "spi_hz": 62500000,
+      "display_disabled": false,
+      "display_errors": 0,
+      "rendered_frames": 2745,
+      "presented_frames": 2744,
+      "dropped_frames": 21,
+      "render_us": 6996,
+      "render_max_us": 14807,
+      "last_present_us": 14385,
+      "max_present_us": 17018,
+      "sim_max_us": 1268,
+      "touch_errors": 0,
+      "touch_irq": 0,
+      "bootsel_read_failures": 0,
+      "sim_overruns": 8,
+      "control_mode": 2,
+      "imu_ok": true,
+      "imu_revision": 124,
+      "motion_age_ms": 8,
+      "accel_mg": [
+        -626,
+        575,
+        -478
+      ],
+      "gyro_mdps": [
+        -21140,
+        -18890,
+        6453
+      ]
+    },
+    "phase_last": "play",
+    "tilt_ready": true,
+    "calibrated_samples": 41,
+    "total_samples": 41,
+    "frame_crc32": 595442356
+  },
+  "tuning": {
+    "autofire_volleys_hz": 5,
+    "enemy_speed_reduction": "roughly one-third",
+    "split_left": "clockwise",
+    "split_right": "counterclockwise",
+    "player_outline": "ivory inner, dark outer halo",
+    "player_layer": "above HUD and gameplay messages",
+    "all_32_ship_headings_visibility_test": true
+  }
 }

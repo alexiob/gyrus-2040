@@ -20,8 +20,8 @@ static void init(void) {
 }
 static void split_hold_and_release(void) {
     init();
-    assert(step(CONTROLS_PLAY, 17, true, 30, 120, false).input.turn == -1);
-    assert(step(CONTROLS_PLAY, 34, true, 210, 120, false).input.turn == 1);
+    assert(step(CONTROLS_PLAY, 17, true, 30, 120, false).input.turn == 1);
+    assert(step(CONTROLS_PLAY, 34, true, 210, 120, false).input.turn == -1);
     assert(step(CONTROLS_PLAY, 51, true, 120, 45, false).input.turn == 0);
     assert(step(CONTROLS_PLAY, 68, false, 0, 0, false).input.turn == 0);
     assert(step(CONTROLS_PLAY, 85, true, 120, 120, false).input.turn == 0);

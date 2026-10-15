@@ -212,31 +212,36 @@ static void title(const game_state *g, uint8_t *fb, bool over) {
 }
 static void hud(const game_state *g, uint8_t *fb) {
     char number[11];
-    fill(fb, 69, 9, 102, 23, BLACK);
+    const bool flying = g->phase == GAME_PLAY || g->phase == GAME_CHANCE || g->phase == GAME_PAUSED;
+    const int top = flying ? 39 : 9, bottom = flying ? 199 : 219, status = flying ? 64 : 33;
+    /* Keep flight HUD inside the orbit; the ship is also composited last. */
+    fill(fb, 74, top, 92, 23, BLACK);
     decimal(number, g->score, 6);
-    label(fb, "1UP", 76, 10, AMBER, 1);
-    label(fb, number, 102, 10, IVORY, 1);
+    label(fb, "1UP", 76, top + 1, AMBER, 1);
+    label(fb, number, 102, top + 1, IVORY, 1);
     decimal(number, g->high_score, 6);
-    label(fb, "HI", 79, 22, RED, 1);
-    label(fb, number, 102, 22, STEEL, 1);
+    label(fb, "HI", 79, top + 13, RED, 1);
+    label(fb, number, 102, top + 13, STEEL, 1);
     decimal(number, g->stage, 2);
     const int width = 41 + text_width(number, 1);
-    fill(fb, 116 - width / 2, 219, width + 8, 11, BLACK);
-    label(fb, "STAGE", 120 - width / 2, 221, STEEL, 1);
-    label(fb, number, 156 - width / 2, 221, IVORY, 1);
+    fill(fb, 116 - width / 2, bottom, width + 8, 11, BLACK);
+    label(fb, "STAGE", 120 - width / 2, bottom + 2, STEEL, 1);
+    label(fb, number, 156 - width / 2, bottom + 2, IVORY, 1);
     const unsigned shown = g->lives > 5u ? 5u : g->lives;
     if (g->phase != GAME_INTRO && g->phase != GAME_ARRIVAL)
         for (unsigned i = 0; i < shown; ++i)
-            sprite(fb, GYRUS_SPRITE_LIFE, 0, 97 + (int)i * 11, 209);
-    if (g->double_fire != 0u)
-        label(fb, "DUAL", 149, 33, CYAN, 1);
+            sprite(fb, GYRUS_SPRITE_LIFE, 0, 97 + (int)i * 11, 187);
+    if (g->autofire)
+        label(fb, "AUTO", 108, status, STEEL, 1);
+    if (g->double_fire)
+        label(fb, "DUAL", 149, status, CYAN, 1);
     if (g->invincible)
-        label(fb, "+", 69, 33, GREEN, 1);
+        label(fb, "+", 69, status, GREEN, 1);
     if (g->phase == GAME_CHANCE) {
-        centered(fb, "CHANCE", 39, AMBER, 1);
+        centered(fb, "CHANCE", 76, AMBER, 1);
         decimal(number, g->destroyed, 2);
-        label(fb, number, 108, 195, CYAN, 1);
-        label(fb, "/40", 120, 195, STEEL, 1);
+        label(fb, number, 108, 174, CYAN, 1);
+        label(fb, "/40", 120, 174, STEEL, 1);
     }
 }
 static void projectiles(const game_state *g, uint8_t *fb) {
@@ -333,6 +338,18 @@ static void ship(const game_state *g, uint8_t *fb) {
     int16_t x, y;
     game_polar(g->ship_angle, 104 * 256, &x, &y);
     const unsigned heading = ((unsigned)g->ship_angle + 32768u) >> 11u;
+    const gyrus_asset *hull = gyrus_sprite(GYRUS_SPRITE_PLAYER, heading);
+    int left = x - (int)hull->width / 2, top = y - (int)hull->height / 2;
+    /* Dark outer halo separates the bright hull border from text and enemies. */
+    for (unsigned pass = 0; pass < 2; ++pass) {
+        int radius = pass == 0 ? 2 : 1;
+        uint8_t color = pass == 0 ? BLACK : IVORY;
+        for (unsigned sy = 0; sy < hull->height; ++sy)
+            for (unsigned sx = 0; sx < hull->width; ++sx)
+                if (hull->pixels[sy * hull->width + sx])
+                    fill(fb, left + (int)sx - radius, top + (int)sy - radius, 2 * radius + 1,
+                         2 * radius + 1, color);
+    }
     sprite(fb, GYRUS_SPRITE_PLAYER, heading, x, y);
     if (g->double_fire != 0u) {
         int16_t lx, ly, rx, ry;
@@ -403,7 +420,8 @@ void game_render(const game_state *g, uint8_t framebuffer[GAME_WIDTH * GAME_HEIG
             projectiles(g, framebuffer);
             enemies(g, framebuffer);
             particles(g, framebuffer);
-            ship(g, framebuffer);
+            if (g->phase == GAME_PAUSED)
+                ship(g, framebuffer);
         }
         hud(g, framebuffer);
         if (g->control_mode == (uint8_t)CONTROLS_TILT && !g->tilt_ready &&
@@ -414,6 +432,8 @@ void game_render(const game_state *g, uint8_t framebuffer[GAME_WIDTH * GAME_HEIG
         }
         if (g->phase == GAME_PAUSED)
             pause_menu(g, framebuffer);
+        if (g->phase == GAME_PLAY || g->phase == GAME_CHANCE)
+            ship(g, framebuffer); /* Foreground priority over HUD and messages. */
     }
     /* A round LCD hides these pixels physically. Masking also makes host captures
        show the exact playable aperture and prevents corner-only HUD content. */

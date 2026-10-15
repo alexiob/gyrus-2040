@@ -317,9 +317,9 @@ controls_output controls_update(controls_state *state, controls_sample sample,
             if (state->mode == CONTROLS_SPLIT_HOLD) {
                 if (r2 > CONTROLS_CENTER_RADIUS * CONTROLS_CENTER_RADIUS && r2 <= 120 * 120) {
                     if (sample.touch_x < 108u)
-                        out.input.turn = -1;
-                    else if (sample.touch_x >= 132u)
                         out.input.turn = 1;
+                    else if (sample.touch_x >= 132u)
+                        out.input.turn = -1;
                 }
             } else if (state->mode == CONTROLS_RELATIVE_DRAG &&
                        r2 >= CONTROLS_DRAG_MIN_RADIUS * CONTROLS_DRAG_MIN_RADIUS &&

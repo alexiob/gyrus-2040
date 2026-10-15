@@ -357,7 +357,9 @@ int main(void) {
                 render_next();
             }
         }
-        if (time_us_64() >= next_tick) {
+        /* Only discard backlog after exhausting the catch-up budget. A tick
+         * becoming due after the while condition must run on the next pass. */
+        if (catchup == 4u && time_us_64() >= next_tick) {
             ++sim_overruns;
             next_tick = time_us_64() + 1000000u / GAME_TICK_HZ;
             remainder = 0;

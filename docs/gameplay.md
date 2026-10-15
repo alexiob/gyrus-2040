@@ -15,6 +15,12 @@ surviving lone emitter has no connecting beam. Shooting the satellite awards
 double fire. Losing a life removes double fire, clears projectiles and gives a
 short period of invulnerability. The game ends after the final life.
 
+Autofire produces five volleys per second (paired shots after a power-up).
+Enemy rotation, dives, return paths, meteors and hostile projectiles were slowed
+by roughly one-third after physical play testing. Split touch steering is
+inverted: left touch turns clockwise; right touch turns counterclockwise.
+The ship is drawn above HUD/messages with an ivory edge and dark halo.
+
 Ordinary enemies score 100/150/200 points; the satellite scores 1000 (2000 while
 already powered), guards 500 and laser emitters 200. An extra life is awarded at
 30,000 points and every further 60,000, up to nine lives. Scores saturate at

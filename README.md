@@ -6,8 +6,9 @@ The game uses original pixel art inspired by Gyruss: entering formations,
 inward fire, diving enemies, meteors, satellite double fire, laser pairs,
 six planetary destinations, chance stages, extra lives and game over.
 
-**Autofire is ON by default.** Touch START, steer, and tap the centre to pause.
-Select LEFT / RIGHT, BORDER DRAG, or TILT on the title/pause screen. Tilt
+**Autofire is ON by default at five volleys per second.** Touch START, steer, and tap the centre to pause.
+Select LEFT / RIGHT, BORDER DRAG, or TILT on the title/pause screen.
+Split touch is inverted: left turns clockwise, right counterclockwise. Tilt
 calibrates after holding still for half a second at start/resume. The pause menu
 has separate Quit and Reboot actions; Reboot needs a continuous five-second hold.
 Physical RESET always resets the chip immediately. BOOT can start/resume, and
@@ -96,8 +97,8 @@ fixed 60 Hz simulation/input and indexed rendering. Core1 converts 16-row strips
 while the previous RGB565 strip transfers by DMA. Two indexed frames and two
 strips use 130,560 bytes. Circular transfer windows send 49,120 pixels instead of
 57,600 after one complete GRAM initialization, reducing pixel traffic 14.7%.
-The board measured roughly 14.3 ms per optimized presentation and 59.9 frames/s
-in a 15.5-second observation. Rendering and touch continue independently of DMA.
+The board measured roughly 14.4 ms per optimized presentation and about 60 frames/s
+in short observations. Rendering and touch continue independently of DMA.
 Presentation can be built at 30 Hz with `-DGYRUS_PRESENT_HZ=30`.
 
 The final link reserves 8 KiB for core0's USB/debug stack in main SRAM and 4 KiB

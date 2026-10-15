@@ -40,7 +40,33 @@ static void check_frame(const game_state *state) {
     assert(memcmp(&snapshot, state, sizeof snapshot) == 0);
 }
 
+static void player_stays_visible(void) {
+    static uint8_t pixels[GAME_WIDTH * GAME_HEIGHT];
+    game_state g;
+    game_init(&g, 1);
+    g.phase = GAME_PLAY;
+    g.invulnerable = 0;
+    for (unsigned heading = 0; heading < 32; ++heading) {
+        g.ship_angle = (uint16_t)(heading * 2048u);
+        int16_t cx, cy;
+        game_polar(g.ship_angle, 104 * 256, &cx, &cy);
+        const gyrus_asset *a =
+            gyrus_sprite(GYRUS_SPRITE_PLAYER, ((unsigned)g.ship_angle + 32768u + 1024u) >> 11u);
+        game_render(&g, pixels);
+        for (unsigned y = 0; y < a->height; ++y)
+            for (unsigned x = 0; x < a->width; ++x) {
+                uint8_t color = a->pixels[y * a->width + x];
+                if (!color)
+                    continue;
+                int px = cx - (int)a->width / 2 + (int)x;
+                int py = cy - (int)a->height / 2 + (int)y;
+                assert(px >= 0 && px < 240 && py >= 0 && py < 240);
+                assert(pixels[(unsigned)py * GAME_WIDTH + (unsigned)px] == color);
+            }
+    }
+}
 int main(void) {
+    player_stays_visible();
     for (uint32_t seed = 1; seed <= 32u; ++seed) {
         game_state base;
         game_init(&base, seed);

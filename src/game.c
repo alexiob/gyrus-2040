@@ -127,7 +127,7 @@ static game_enemy *spawn_enemy(game_state *g, uint8_t kind, uint16_t angle, int3
                                uint8_t mode) {
     for (unsigned i = 0; i < GAME_ENEMIES; ++i)
         if (!g->enemies[i].active) {
-            const int16_t speed = (int16_t)(260u + (unsigned)g->cycle * 16u + kind * 18u);
+            const int16_t speed = (int16_t)(170u + (unsigned)g->cycle * 12u + kind * 12u);
             g->enemies[i] = (game_enemy){.radius = radius,
                                          .angle = angle,
                                          .kind = kind,
@@ -216,19 +216,19 @@ static void update_enemies(game_state *g) {
             if (e->age > 360u)
                 e->active = 0;
         } else if (e->kind == 4u || e->kind == 5u) {
-            e->radius += e->kind == 4u ? 640 : 128;
+            e->radius += e->kind == 4u ? 384 : 96;
             if (e->radius > 130 * 256)
                 e->active = 0;
         } else if (chance || e->mode == 4u) {
             e->angle = add_angle(e->angle, e->angular_speed * 2);
-            e->radius += e->age < 85u ? 128 : 300;
+            e->radius += e->age < 85u ? 96 : 200;
             if (e->radius > 130 * 256) {
                 e->active = 0;
                 ++g->escaped;
             }
         } else {
             if (e->mode == 0u) {
-                e->radius += 90;
+                e->radius += 64;
                 e->angle = add_angle(e->angle, e->angular_speed);
                 if (e->age >= 90u) {
                     e->mode = 1;
@@ -241,13 +241,13 @@ static void update_enemies(game_state *g) {
             } else if (e->mode == 2u) {
                 const int16_t difference = (int16_t)(uint16_t)(g->ship_angle - e->angle);
                 e->angle = add_angle(e->angle, difference / 24);
-                e->radius += 384 + (int32_t)g->cycle * 12;
+                e->radius += 256 + (int32_t)g->cycle * 10;
                 if (e->radius > 126 * 256) {
                     e->mode = 3;
                     e->angle = add_angle(e->angle, 8192);
                 }
             } else {
-                e->radius -= 512;
+                e->radius -= 320;
                 e->angle = add_angle(e->angle, e->angular_speed / 4);
                 if (e->radius <= 32 * 256) {
                     e->mode = 1;
@@ -259,7 +259,7 @@ static void update_enemies(game_state *g) {
                 ++g->escaped;
                 continue;
             }
-            if (e->age > 100u && (e->age + i * 23u) % 180u == 0u)
+            if (e->age > 100u && (e->age + i * 23u) % 240u == 0u)
                 fire_shot(g->hostile, GAME_HOSTILE_SHOTS,
                           add_angle(g->ship_angle, (int32_t)(random_word(g) % 1601u) - 800),
                           e->radius);
@@ -280,7 +280,7 @@ static void update_shots(game_state *g) {
         game_shot *s = &g->hostile[i];
         if (!s->active)
             continue;
-        s->radius += 384 + (int32_t)g->cycle * 12;
+        s->radius += 256 + (int32_t)g->cycle * 10;
         ++s->age;
         if (s->radius > 130 * 256)
             s->active = 0;
@@ -419,7 +419,7 @@ void game_step(game_state *g, const game_input *input) {
                   100 * 256);
         if (g->double_fire)
             fire_shot(g->shots, GAME_SHOTS, add_angle(g->ship_angle, 550), 100 * 256);
-        g->fire_cooldown = 7;
+        g->fire_cooldown = 12; /* Five shots/second at60Hz; double fire stays paired. */
     }
     spawns(g);
     update_enemies(g);

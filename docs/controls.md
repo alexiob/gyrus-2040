@@ -4,7 +4,7 @@ The input layer runs independently of hardware and translates raw touch, BOOT, a
 
 ## Play
 
-The initial mode is **LEFT / RIGHT** (`CONTROLS_SPLIT_HOLD`). Hold the left side to orbit counterclockwise, or the right side clockwise. A 24-pixel vertical neutral strip prevents direction jitter. The center circle (radius 36 pixels) is reserved for pause; a short tap there pauses on release. Touch release stops turning. Touches outside the round display do not turn the ship.
+The initial mode is **LEFT / RIGHT** (`CONTROLS_SPLIT_HOLD`). Split touch steering uses the inverted mapping: hold the left side to orbit clockwise (+1), or the right side counterclockwise (-1). A 24-pixel vertical neutral strip prevents direction jitter. The center circle (radius 36 pixels) is reserved for pause; a short tap there pauses on release. Touch release stops turning. Touches outside the round display do not turn the ship.
 
 **BORDER DRAG** (`CONTROLS_RELATIVE_DRAG`) follows relative angular finger movement around the border, in either direction. The ship does not jump to the finger's initial angle. Starting or resuming a drag anchors at the current finger position. A 56-pixel center deadzone prevents unstable angles; passing through it re-anchors the drag. Crossing 0/360 degrees works continuously. A movement larger than 45 degrees in one sample is treated as a discontinuity and re-anchors without moving the ship. Angle conversion uses an integer lookup table and interpolation; there is no floating-point work in the tick path.
 

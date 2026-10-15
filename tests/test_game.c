@@ -175,6 +175,11 @@ static int autofire_test(void) {
     CHECK(active == 1);
     game_step(&g, NULL);
     CHECK(!g.shots[1].active);
+    for (unsigned i = 0; i < 10; ++i)
+        game_step(&g, NULL);
+    CHECK(!g.shots[1].active);
+    game_step(&g, NULL);
+    CHECK(g.shots[1].active); /* Next volley after0.2seconds. */
     g.autofire = false;
     memset(g.shots, 0, sizeof g.shots);
     g.fire_cooldown = 0;

@@ -270,7 +270,17 @@ static void title(const game_state *g, uint8_t *fb, bool over) {
                                                                    : "HOLD SIDES TO ORBIT");
     centered(fb, instruction, 197, STEEL, 1);
     centered(fb, tilt ? "HOLD STILL TO CENTRE" : "TAP CENTRE TO PAUSE", 208, STEEL, 1);
-    sprite(fb, GYRUS_SPRITE_LIFE, 0, 120, 228);
+    int arrow_x = 120;
+    if (tilt && g->tilt_ready) {
+        int preview = g->tilt_preview;
+        if (preview < -1000)
+            preview = -1000;
+        else if (preview > 1000)
+            preview = 1000;
+        /* Match the Settings bank preview; keep the hull inside the round rim. */
+        arrow_x += preview * 36 / 1000;
+    }
+    sprite(fb, GYRUS_SPRITE_LIFE, 0, arrow_x, 228);
 }
 static void hud(const game_state *g, uint8_t *fb) {
     char number[11];

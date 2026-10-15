@@ -62,6 +62,10 @@
 #define CONTROLS_SETTINGS_MODE_X1 192u
 #define CONTROLS_SETTINGS_MODE_Y0 52u
 #define CONTROLS_SETTINGS_MODE_Y1 76u
+#define CONTROLS_CALIBRATE_X0 68u
+#define CONTROLS_CALIBRATE_X1 172u
+#define CONTROLS_CALIBRATE_Y0 216u
+#define CONTROLS_CALIBRATE_Y1 240u
 #define CONTROLS_CENTER_X 120
 #define CONTROLS_CENTER_Y 120
 #define CONTROLS_CENTER_RADIUS 36
@@ -77,6 +81,8 @@ typedef enum {
     CONTROLS_TILT,
     CONTROLS_MODE_COUNT
 } controls_mode;
+/* Display-aligned body frame: +X is screen-right. Hardware backends rotate
+ * acceleration and angular velocity together from their sensor mounting. */
 typedef struct {
     int32_t accel_mg[3];
     int32_t gyro_mdps[3];
@@ -103,7 +109,8 @@ typedef enum {
     CONTROLS_TARGET_ENEMY_DOWN,
     CONTROLS_TARGET_ENEMY_UP,
     CONTROLS_TARGET_TILT_DOWN,
-    CONTROLS_TARGET_TILT_UP
+    CONTROLS_TARGET_TILT_UP,
+    CONTROLS_TARGET_CALIBRATE
 } controls_target;
 typedef struct {
     uint32_t now_ms;

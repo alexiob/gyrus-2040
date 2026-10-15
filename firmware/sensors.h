@@ -21,6 +21,9 @@ bool sensors_touch(diag_touch *out);
  * Core0 only; shares the bounded I2C bus with touch. False also means no new
  * data this tick; output clears on false. No allocation or floating point. */
 bool sensors_motion(controls_motion *out);
+/* Board mounting to display frame: X=rawY, Y=-rawX, Z=rawZ.
+ * Apply to both vectors before controls_update; raw telemetry stays sensor-frame. */
+void sensors_motion_to_display(controls_motion *motion);
 unsigned sensors_irq_count(void);
 unsigned sensors_errors(void);
 #endif

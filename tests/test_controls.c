@@ -499,7 +499,32 @@ static void degenerate_bank_projection_stops_then_recalibrates(void) {
         (void)pose_tick(CONTROLS_PLAY, ms, 1000, 0, 0, 0, 0, 0);
     assert(controls_tilt_ready(&state));
 }
+static void menu_arrow_recalibrates_comfortable_neutral(void) {
+    init();
+    controls_set_mode(&state, CONTROLS_TILT);
+    for (uint32_t ms = 0; ms <= 600; ms += 20)
+        (void)pose_tick(CONTROLS_TITLE, ms, 0, 0, 1000, 0, 0, 0);
+    for (uint32_t ms = 620; ms <= 1620; ms += 20)
+        (void)pose_tick(CONTROLS_TITLE, ms, 423, 0, 906, 0, 0, 0);
+    assert(controls_tilt_ready(&state) && controls_tilt_preview(&state) > 500);
+    assert(controls_hit_test(CONTROLS_TITLE, 156, 228) == CONTROLS_TARGET_CALIBRATE);
+    assert(controls_hit_test(CONTROLS_GAME_OVER, 84, 228) == CONTROLS_TARGET_CALIBRATE);
+    assert(controls_hit_test(CONTROLS_TITLE, 120, 215) == CONTROLS_TARGET_NONE);
+    (void)step(CONTROLS_TITLE, 1640, true, 156, 228, false);
+    assert(controls_tilt_ready(&state)); /* Act only on release. */
+    controls_output out = step(CONTROLS_TITLE, 1660, false, 0, 0, false);
+    assert(!controls_tilt_ready(&state) && controls_tilt_preview(&state) == 0);
+    assert(!out.input.start && !out.input.quit && !out.input.pause);
+    for (uint32_t ms = 1680; ms <= 2280; ms += 20)
+        (void)pose_tick(CONTROLS_TITLE, ms, 423, 0, 906, 0, 0, 0);
+    assert(controls_tilt_ready(&state) && controls_tilt_preview(&state) == 0);
+    (void)step(CONTROLS_TITLE, 2300, true, 120, 228, false);
+    controls_cancel_touch(&state);
+    (void)step(CONTROLS_TITLE, 2320, false, 0, 0, false);
+    assert(controls_tilt_ready(&state)); /* Failed bus read is not a tap. */
+}
 int main(void) {
+    menu_arrow_recalibrates_comfortable_neutral();
     degenerate_bank_projection_stops_then_recalibrates();
     settings_tilt_preview_and_fresh_context_preservation();
     learned_gyro_axis_predicts_bank_in_all_poses();

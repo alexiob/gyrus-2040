@@ -161,7 +161,8 @@ static void simulate(void) {
     now_ms = (uint32_t)(time_us_64() / 1000u);
     sample.now_ms = now_ms;
     if (sample.motion_valid) {
-        last_motion = sample.motion;
+        last_motion = sample.motion; /* Preserve sensor-frame diagnostics. */
+        sensors_motion_to_display(&sample.motion);
         have_motion = true;
     }
     sample.tilt_sensitivity_percent = game.settings.tilt_sensitivity_percent;

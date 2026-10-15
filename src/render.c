@@ -269,7 +269,10 @@ static void title(const game_state *g, uint8_t *fb, bool over) {
              : (g->control_mode == (uint8_t)CONTROLS_RELATIVE_DRAG ? "DRAG RIM TO ORBIT"
                                                                    : "HOLD SIDES TO ORBIT");
     centered(fb, instruction, 197, STEEL, 1);
-    centered(fb, tilt ? "HOLD STILL TO CENTRE" : "TAP CENTRE TO PAUSE", 208, STEEL, 1);
+    centered(fb,
+             tilt ? (g->tilt_ready ? "TAP SHIP TO CENTRE" : "HOLD STILL TO CENTRE")
+                  : "TAP CENTRE TO PAUSE",
+             208, STEEL, 1);
     int arrow_x = 120;
     if (tilt && g->tilt_ready) {
         int preview = g->tilt_preview;

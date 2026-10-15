@@ -1,0 +1,41 @@
+{
+  "uf2_sha256": "47ae8fe66c07534747e9e3046d1dd5129010d5490f97733108aab4cf797d43e4",
+  "flash_verified": true,
+  "host_tests_passed": 21,
+  "raw_right_edge_lower_mg": [
+    140,
+    623,
+    -795
+  ],
+  "raw_left_edge_lower_mg": [
+    -23,
+    -510,
+    -806
+  ],
+  "display_mapping": [
+    "sensorY",
+    "-sensorX",
+    "sensorZ"
+  ],
+  "physical_user_acceptance": "pending",
+  "live_check": {
+    "samples": 768,
+    "duration_seconds": 89.901,
+    "ready_samples": 677,
+    "preview_min": -954,
+    "preview_max": 993,
+    "calibrate_touch_target_observed": true,
+    "phases": [
+      "arrival",
+      "chance",
+      "clear",
+      "game_over",
+      "intro",
+      "play",
+      "title",
+      "warp"
+    ],
+    "touch_errors_delta": 0,
+    "display_errors_delta": 0
+  }
+}

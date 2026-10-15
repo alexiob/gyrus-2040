@@ -129,7 +129,50 @@ static void raw(uint8_t a, unsigned offset, int value) {
     regs[a][0x35 + offset] = (uint8_t)v;
     regs[a][0x36 + offset] = (uint8_t)(v >> 8);
 }
+static void physical_bank_axes_match_display(void) {
+    controls_state input;
+    controls_init(&input);
+    controls_set_mode(&input, CONTROLS_TILT);
+    controls_sample sample = {.motion_valid = true};
+    for (uint32_t ms = 0; ms <= 600; ms += 20) {
+        sample.now_ms = ms;
+        sample.motion = (controls_motion){.accel_mg = {0, 0, -1000}, .sampled_ms = ms};
+        sensors_motion_to_display(&sample.motion);
+        (void)controls_update(&input, sample, CONTROLS_PLAY);
+    }
+    assert(controls_tilt_ready(&input));
+    int delta = 0;
+    /* Real board poses captured with its right, then left edge held lower. */
+    for (uint32_t ms = 620; ms <= 1620; ms += 20) {
+        sample.now_ms = ms;
+        sample.motion = (controls_motion){.accel_mg = {140, 623, -795}, .sampled_ms = ms};
+        sensors_motion_to_display(&sample.motion);
+        delta = controls_update(&input, sample, CONTROLS_PLAY).input.angle_delta;
+    }
+    assert(delta > 500);
+    for (uint32_t ms = 1640; ms <= 2640; ms += 20) {
+        sample.now_ms = ms;
+        sample.motion = (controls_motion){.accel_mg = {-23, -510, -806}, .sampled_ms = ms};
+        sensors_motion_to_display(&sample.motion);
+        delta = controls_update(&input, sample, CONTROLS_PLAY).input.angle_delta;
+    }
+    assert(delta < -500);
+    /* Tipping front/back is the other body axis and must not steer. */
+    for (uint32_t ms = 2660; ms <= 4660; ms += 20) {
+        sample.now_ms = ms;
+        sample.motion = (controls_motion){.accel_mg = {500, 0, -866}, .sampled_ms = ms};
+        sensors_motion_to_display(&sample.motion);
+        delta = controls_update(&input, sample, CONTROLS_PLAY).input.angle_delta;
+    }
+    assert(delta == 0);
+    controls_motion gyro = {.gyro_mdps = {12300, -45600, 78900}, .sampled_ms = 123};
+    sensors_motion_to_display(&gyro);
+    assert(gyro.gyro_mdps[0] == -45600 && gyro.gyro_mdps[1] == -12300 &&
+           gyro.gyro_mdps[2] == 78900 && gyro.sampled_ms == 123);
+    sensors_motion_to_display(NULL);
+}
 int main(void) {
+    physical_bank_axes_match_display();
     fixture(0x6b);
     sensor_info info = sensors_init();
     assert(info.imu_ok && info.touch_ok && info.imu_address == 0x6b);

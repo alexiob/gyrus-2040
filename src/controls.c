@@ -19,6 +19,10 @@ controls_target controls_hit_test(controls_screen screen, uint16_t x, uint16_t y
         if (in_rect(x, y, CONTROLS_TITLE_SETTINGS_X0, CONTROLS_TITLE_SETTINGS_X1,
                     CONTROLS_TITLE_SETTINGS_Y0, CONTROLS_TITLE_SETTINGS_Y1))
             return CONTROLS_TARGET_SETTINGS;
+        if (in_rect(x, y, CONTROLS_CALIBRATE_X0, CONTROLS_CALIBRATE_X1, CONTROLS_CALIBRATE_Y0,
+                    CONTROLS_CALIBRATE_Y1) &&
+            radius_squared(x, y) <= 120 * 120)
+            return CONTROLS_TARGET_CALIBRATE;
     } else if (screen == CONTROLS_PAUSE) {
         if (in_rect(x, y, CONTROLS_RESUME_X0, CONTROLS_RESUME_X1, CONTROLS_RESUME_Y0,
                     CONTROLS_RESUME_Y1))
@@ -489,6 +493,10 @@ controls_output controls_update(controls_state *state, controls_sample sample,
                 break;
             case CONTROLS_TARGET_TILT_UP:
                 out.input.menu_action = GAME_MENU_TILT_UP;
+                break;
+            case CONTROLS_TARGET_CALIBRATE:
+                if (state->mode == CONTROLS_TILT)
+                    controls_tilt_reset(state);
                 break;
             case CONTROLS_TARGET_MODE:
                 controls_set_mode(state, (controls_mode)(((unsigned)state->mode + 1u) %

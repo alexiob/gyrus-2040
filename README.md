@@ -11,7 +11,9 @@ Open **Settings** on the title or pause menu to select LEFT / RIGHT, BORDER DRAG
 Split touch is inverted: left turns clockwise, right counterclockwise. Tilt
 calibrates after holding still for half a second in a comfortable pose, including upright.
 Settings shows calibration progress and a live steering indicator. A fresh calibration
-survives starting/resuming a game. The pause menu
+survives starting/resuming a game. Tap the small ship arrow at the bottom of
+the title menu, then hold still to set a new neutral position. Lower the left
+or right edge like banking a tray to steer. The pause menu
 has separate Quit and Reboot actions; Reboot needs a continuous five-second hold.
 Open **Settings** to adjust fire rate (1–10 volleys/s), enemy speed
 (25–200%), and tilt sensitivity (50–200%) with touch −/+ buttons. Values remain
@@ -119,6 +121,7 @@ The QMI8658A uses synchronized shadow-register reads for coherent 6-axis samples
 No TE wire is exposed; buffering cannot guarantee synchronized panel scanout.
 
 - [Game implementation and validation](docs/hardware/2026-10-15-game.md)
+- [Physical tilt axes and tap-to-recenter](docs/hardware/2026-10-15-tilt-recenter.md)
 - [Settings, 3D tilt, and transition verification](docs/hardware/2026-10-15-controls-transitions.md)
 - [Earlier on-device settings verification](docs/hardware/2026-10-15-settings.md)
 - [Controls and IMU details](docs/controls.md)

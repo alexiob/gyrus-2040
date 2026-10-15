@@ -170,3 +170,15 @@ unsigned sensors_irq_count(void) {
 unsigned sensors_errors(void) {
     return errors;
 }
+
+void sensors_motion_to_display(controls_motion *motion) {
+    if (motion == NULL)
+        return;
+    /* The mounted IMU is rotated a quarter-turn relative to the LCD. Keep
+     * a proper rotation for both vectors so gyro prediction agrees with gravity. */
+    int32_t ax = motion->accel_mg[0], gx = motion->gyro_mdps[0];
+    motion->accel_mg[0] = motion->accel_mg[1];
+    motion->accel_mg[1] = -ax;
+    motion->gyro_mdps[0] = motion->gyro_mdps[1];
+    motion->gyro_mdps[1] = -gx;
+}

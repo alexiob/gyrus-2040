@@ -8,7 +8,19 @@ The initial mode is **LEFT / RIGHT** (`CONTROLS_SPLIT_HOLD`). Split touch steeri
 
 **BORDER DRAG** (`CONTROLS_RELATIVE_DRAG`) follows relative angular finger movement around the border, in either direction. The ship does not jump to the finger's initial angle. Starting or resuming a drag anchors at the current finger position. A 56-pixel center deadzone prevents unstable angles; passing through it re-anchors the drag. Crossing 0/360 degrees works continuously. A movement larger than 45 degrees in one sample is treated as a discontinuity and re-anchors without moving the ship. Angle conversion uses an integer lookup table and interpolation; there is no floating-point work in the tick path.
 
-**TILT** (`CONTROLS_TILT`) uses the onboard accelerometer and gyroscope. Open SETTINGS from the title, game-over, or pause menu and choose TILT on its control-mode row. Hold the board in a comfortable neutral pose for half a second. The Settings screen shows calibration progress and a live steering preview, so calibration can be checked before playing. The small ship arrow at the bottom of the title/game-over menu also moves left/right in proportion to the calibrated tilt input; it stays centered until ready and in other steering modes. Steering is disabled while calibration is pending. Fresh calibration survives Settings, title, game-over, pause, and play transitions. It restarts on mode change, stale/invalid sensor data, an unusable bank projection, or an explicit `controls_tilt_reset()`.
+**TILT** (`CONTROLS_TILT`) uses the onboard accelerometer and gyroscope. Open SETTINGS from the title, game-over, or pause menu and choose TILT on its control-mode row. Hold the board in a comfortable neutral pose for half a second. The Settings screen shows calibration progress and a live steering preview, so calibration can be checked before playing. The small ship arrow at the bottom of the title/game-over menu also moves left/right in proportion to the calibrated tilt input; it stays centered until ready and in other steering modes. Tap it in TILT mode to clear the old reference, then hold the board still in a comfortable pose for half a second to learn a new neutral position. The touch target spans the lower strip so the moving icon is easy to tap. A cancelled contact or failed touch read cannot reset calibration. Steering is disabled while calibration is pending. Fresh calibration survives Settings, title, game-over, pause, and play transitions. It restarts on mode change, stale/invalid sensor data, an unusable bank projection, or an explicit `controls_tilt_reset()`.
+
+The RP2040 board's IMU mounting is rotated relative to the LCD. Hardware samples
+are converted to a display-aligned body frame before entering the portable controls
+layer: display X = sensor Y, display Y = −sensor X, display Z = sensor Z. Both
+acceleration and gyro use the same proper rotation. A physical right-edge-lowered
+pose measured sensor `[140,623,-795]` mg; a left-edge-lowered pose measured
+`[-23,-510,-806]` mg, confirming the horizontal axis and sign. Thus lowering the
+right edge makes the menu arrow move right; lowering the left makes it move left.
+Front/back pitch does not steer for a face-up neutral. STATE hardware vectors
+remain in the raw sensor frame for diagnosis; the desktop virtual IMU already
+uses the display frame. The earlier unrotated mapping incorrectly treated sensor
+X as screen-left/right.
 
 The neutral reference uses the full three-dimensional gravity vector and learns gyro bias on all three axes. Screen +X is projected onto the plane perpendicular to the neutral gravity vector to define rightward bank; the cross product of those two directions defines the corresponding gyro rotation axis. A board lying flat therefore uses a different gyro combination from an upright board. The implementation supports positive/negative Z flat poses, positive/negative Y upright poses, and inclined poses without depending on a nonzero initial X/Z projection. A board standing exactly on its side uses projected screen Y as a deterministic fallback. The angle and basis calculations use integers.
 
@@ -33,6 +45,7 @@ The exact half-open hit rectangles are in `include/gyrus/controls.h` and must al
 | --- | --- | --- | --- |
 | Title / game over | Start | 60..179 | 92..135 |
 | Title / game over | Settings | 48..191 | 145..176 |
+| Title / game over | Recenter tilt | 68..171 | 216..239 (inside round rim) |
 | Pause | Resume | 60..179 | 80..103 |
 | Pause | Settings | 60..179 | 115..138 |
 | Pause | Quit | 60..179 | 149..172 |

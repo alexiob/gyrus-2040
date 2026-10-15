@@ -1,6 +1,6 @@
 # Native Gyruss adaptation for RP2040 round LCD
 
-**Status: proposed design for user review, not approved or implemented.**
+**Status: architecture approved by the user on 15 October 2026. Diagnostic implementation authorized; game implementation remains a later milestone.**
 Date: 15 October 2026.
 
 ## Intent and success

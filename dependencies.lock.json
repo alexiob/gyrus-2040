@@ -2,5 +2,6 @@
   "pico_sdk": {"url": "https://github.com/raspberrypi/pico-sdk.git", "tag": "2.3.1", "commit": "079c6f39023649b154152db30f1d781e884879bc", "tinyusb_commit": "86ad6e56c1700e85f1c5678607a762cfe3aa2f47"},
   "arm_toolchain": {"version": "15.3.rel2", "filename": "arm-toolchain-complete.pkg", "url": "https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel2/arm-gnu-toolchain-15.3.rel2-darwin-arm64-arm-none-eabi.pkg", "sha256": "779972fa545f738bfbba2ff0ae44d5ad7510b00cfb414702974844ba625412f3"},
   "picotool": {"version": "2.3.1", "filename": "picotool.zip", "url": "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.3.1-0/picotool-2.3.1-mac.zip", "sha256": "7bb3cea5d9f1b000fc758cf4b54774fda5c16a9899d342ef6b0c30138988793b"},
+  "sokol": {"url": "https://github.com/floooh/sokol", "commit": "5e94d1291fea504ed911090338cf35bd9ef49a06", "license": "zlib/libpng", "headers_sha256": {"sokol_app.h": "b7ddb3218026eae84cec65e6a1efd37a16cfb00c30c7036f0688f52d65067ea9", "sokol_gfx.h": "6af70de1a768ac3ff85f4c0a145c2e8e702abd5f101c2ad005b69ef69d5094f0", "sokol_glue.h": "6207d08f7ea5da43154f980c7fe314429eafb75922c6b41108ce2936f8240753", "util/sokol_gl.h": "3b617e9de184dce8ac4c3ef95c740868cec4c5561c48ed7e962ee26a80a591c7"}},
   "pyserial": "3.5"
 }

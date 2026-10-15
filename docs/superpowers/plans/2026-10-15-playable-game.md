@@ -14,10 +14,15 @@ Check input wrap/release, physical reset impossibility, QSPI sampling across
 cores, frame ownership, screenshot framing, bounds/state mutation, game
 termination and route progression, SRAM headroom and severe scheduling stalls.
 
-- [ ] A controls worker: inspect schematics, document mapping, implement/test split and angular drag, safe BOOT sampling and on-screen actions.
-- [ ] B instrumentation worker: bounded G1 protocol/tests, exact frame capture, Python client, headless and Sokol adapters.
-- [ ] C assets worker: author sprites/font/planets/palette, reproducible conversion and native-size preview/size report.
-- [ ] D root: tests first for simulation, implement combat/route/chance/hazards/scoring/lives/title and pure renderer.
-- [ ] Root integrate all CMake targets, device indexed frame/strip ownership and controls/protocol wiring.
-- [ ] Run full host tests, scripted debug integration, inspect captures, clean ARM build/map; fix failures.
-- [ ] Independent review, fix important issues; build/flash game, verify actual G1 state/input/step/skip/capture and physical controls; record results.
+- [x] A controls worker: inspect schematics, document mapping, implement/test split and angular drag, safe BOOT sampling and on-screen actions.
+- [x] B instrumentation worker: bounded G1 protocol/tests, exact frame capture, Python client, headless and Sokol adapters.
+- [x] C assets worker: author sprites/font/planets/palette, reproducible conversion and native-size preview/size report.
+- [x] D root: tests first for simulation, implement combat/route/chance/hazards/scoring/lives/title and pure renderer.
+- [x] Root integrate all CMake targets, device indexed frame/strip ownership and controls/protocol wiring.
+- [x] Run full host tests, scripted debug integration, inspect captures, clean ARM build/map; fix failures.
+- [x] Independent review, fix important issues; build/flash game, verify actual G1 state/input/step/skip/capture and physical controls; record results.
+
+Tilt and default autofire were added from user feedback. Firmware is flashed;
+physical display, steering, fire, menus and autofire are confirmed. Tilt
+acceptance is pending; on-screen reboot is host-tested, not physically tested.
+See docs/hardware/2026-10-15-game.md for measured limits and evidence.

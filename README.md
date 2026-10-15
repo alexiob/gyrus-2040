@@ -1,96 +1,125 @@
 # Gyrus 2040
 
-Native C project for a Gyruss-inspired game on the Waveshare
-**RP2040-Touch-LCD-1.28**. The architecture is approved; its board diagnostic is
-implemented and tested on the connected device. Gameplay and the Sokol
-simulator are the next milestones.
+Playable native C11 orbital shooter for the Waveshare
+**RP2040-Touch-LCD-1.28**, with a Sokol/Metal desktop simulator and headless runner.
+The game uses original pixel art inspired by Gyruss: entering formations,
+inward fire, diving enemies, meteors, satellite double fire, laser pairs,
+six planetary destinations, chance stages, extra lives and game over.
 
-## Tested board diagnostic
+**Autofire is ON by default.** Touch START, steer, and tap the centre to pause.
+Select LEFT / RIGHT, BORDER DRAG, or TILT on the title/pause screen. Tilt
+calibrates after holding still for half a second at start/resume. The pause menu
+has separate Quit and Reboot actions; Reboot needs a continuous five-second hold.
+Physical RESET always resets the chip immediately. BOOT can start/resume, and
+can fire when autofire is disabled for debugging.
 
-The firmware drives the GC9A01 display with native RGB565/16-bit SPI DMA,
-reads capacitive touch while DMA runs, shows color bars/checkerboard/grid and a
-touch cursor, and exposes a bounded USB CDC diagnostic protocol.
+![Device framebuffer captured over USB](docs/hardware/game-combat.png)
 
-- CPU/peripheral/USB clocks: **125/125/48 MHz**, no CPU overclock.
-- Fast SPI: **62.5 MHz**, measured **16.148 ms** mean per full-screen DMA
-  transfer (61.93 transfers/s). This is transfer capacity, not game frame rate.
-- User confirmed clean patterns and correct touch tracking/release at the fast rate.
-- Separate 576-transfer stress run: no driver errors.
-- CST816S ID 0xB5 and QMI8658 ID 0x05 detected; IMU motion not yet qualified.
-- Actual board flash: **16 MiB**; conservative firmware link budget: 4 MiB.
-- Host sanitizer tests cover geometry, touch, malformed commands, stuck-transfer
-  recovery, and bounded serial input.
+## Build and run
 
-See [hardware results and full reproduction steps](docs/hardware/2026-10-15-bringup.md)
-and [machine-readable measurements](docs/hardware/2026-10-15-results.json).
-
-## Build
-
-On macOS arm64 with Python 3, CMake, Ninja and Git available:
+On macOS arm64 with Python 3, CMake, Ninja and Git:
 
 ```sh
 python3 tools/setup.py
 cmake --preset host
 cmake --build --preset host
 ctest --preset host
+open build-host/gyrus_desktop.app
 cmake --preset firmware
 cmake --build --preset firmware
 ```
 
-Setup downloads checksum-pinned local tools into `.deps/`; it does not modify
-the system compiler or run a privileged installer. Output:
-`build-rp2040/gyrus_board_diag.uf2`, ELF, linker map and disassembly.
-The SDK uses C++ runtime support files internally; all project firmware and
-portable diagnostic code is C11.
+Setup installs pinned dependencies locally in `.deps/`, including the native
+Arm toolchain, Pico SDK, picotool, pyserial and Sokol headers. No privileged
+installer or system compiler replacement is used. The game core, renderer,
+controls and protocol are C11; the macOS window/Metal bridge is Objective-C.
+Other hosts can build the portable headless runner with
+`-DGYRUS_BUILD_DESKTOP=OFF`; the bundled setup downloads macOS arm64 tools.
 
-## Flash and interact
+Firmware outputs are `build-rp2040/gyrus_game.uf2` and
+`build-rp2040/gyrus_board_diag.uf2`, with ELF, linker map and disassembly.
+The diagnostic remains available for display patterns, touch and SPI benchmarks.
 
-Hold BOOT while reconnecting USB, wait for the `RPI-RP2` drive, then:
-
-```sh
-.deps/picotool/picotool/picotool load -v -x build-rp2040/gyrus_board_diag.uf2 --vid 0x2e8a --pid 0x0003
-```
-
-This replaces the firmware beginning at flash offset zero. Back up existing
-firmware first; the original device backup from this session is kept in the
-ignored `artifacts/hardware/` directory. Select a unique board with `--ser` if
-multiple devices are connected.
-
-After USB re-enumerates:
+Desktop: arrows/A,D turn; mouse emulates touch; Enter starts; Escape pauses;
+M cycles steering modes. Tilt uses J/L to bank and 0/K to re-centre. Space
+emulates BOOT. The debug server binds only 127.0.0.1:20400. To choose another port:
 
 ```sh
-.deps/venv/bin/python tools/diagnose.py info touch windows
-.deps/venv/bin/python tools/diagnose.py bench
-.deps/venv/bin/python tools/diagnose.py 'speed fast' 'pattern checker'
-.deps/venv/bin/python tools/diagnose.py 'stream on' --listen 30
-.deps/venv/bin/python tools/diagnose.py 'stream off'
+build-host/gyrus_desktop.app/Contents/MacOS/gyrus_desktop --debug-port 20401
 ```
 
-Touch tracking is always enabled and shows a red marker on a grid. `boot`
-returns to BOOTSEL; wait for re-enumeration before picotool. Serial access must
-have one owner. Use `--port` when more than one Raspberry Pi serial port exists.
+## Device and debugging
 
-## Architecture and research
+The connected board can enter BOOTSEL through its USB reset interface:
 
-- [Approved architecture](docs/superpowers/specs/2026-10-15-gyruss-rp2040-design.md)
-- [Completed diagnostic plan](docs/superpowers/plans/2026-10-15-board-diagnostics.md)
-- [Display performance design](docs/research/display-performance.md)
-- [Game reference and level structure](docs/research/game-reference.md)
-- [Original toolchain/library research](docs/research/toolchain.md)
-- [Reference pack index](reference/README.md) and [download provenance](reference/manifest.json)
+```sh
+.deps/picotool/picotool/picotool reboot -u --ser E463985803302D34 -f
+```
+
+Wait for BOOTSEL enumeration before loading. Alternatively, hold BOOT while
+reconnecting USB. With one matching board connected:
+
+```sh
+.deps/picotool/picotool/picotool info --vid 0x2e8a --pid 0x0003
+.deps/picotool/picotool/picotool load -v -x build-rp2040/gyrus_game.uf2 --vid 0x2e8a --pid 0x0003
+```
+
+The G1 protocol supports state, bounded field changes, logical input injection,
+freeze/step, level selection, seed reset and CRC-checked framebuffer capture.
+It runs over USB CDC, desktop loopback TCP or headless stdin/stdout:
+
+```sh
+.deps/venv/bin/python tools/gyrusctl.py --serial /dev/cu.usbmodem2241301 STATE
+.deps/venv/bin/python tools/gyrusctl.py --serial /dev/cu.usbmodem2241301 -o capture.png FRAME
+python3 tools/gyrusctl.py --tcp 20400 SET control_mode 2
+python3 tools/gyrusctl.py --tcp 20400 LEVEL 6
+python3 tools/gyrusctl.py --tcp 20400 PAUSE
+python3 tools/gyrusctl.py --tcp 20400 STEP 120
+```
+
+For a repeatable device/native comparison, including eight screenshot captures:
+
+```sh
+.deps/venv/bin/python tools/smoke_game.py --serial /dev/cu.usbmodem2241301
+```
+
+Serial access has one owner. After an output deadline abort, close and reopen
+the serial connection. The CLI clears stale input when connecting. `PAUSE`
+freezes the debug scheduler; the game's on-screen pause is a separate menu.
+A headless process exits with its state; use `--batch commands.txt` to keep a
+scripted scenario in one process. See the [protocol reference](docs/debug-protocol.md).
+
+## Hardware and performance
+
+CPU/peripheral clocks 125 MHz, USB 48 MHz, SPI 62.5 MHz; no CPU overclock. Core0 runs
+fixed 60 Hz simulation/input and indexed rendering. Core1 converts 16-row strips
+while the previous RGB565 strip transfers by DMA. Two indexed frames and two
+strips use 130,560 bytes. Circular transfer windows send 49,120 pixels instead of
+57,600 after one complete GRAM initialization, reducing pixel traffic 14.7%.
+The board measured roughly 14.3 ms per optimized presentation and 59.9 frames/s
+in a 15.5-second observation. Rendering and touch continue independently of DMA.
+Presentation can be built at 30 Hz with `-DGYRUS_PRESENT_HZ=30`.
+
+The final link reserves 8 KiB for core0's USB/debug stack in main SRAM and 4 KiB
+for core1 in scratch SRAM; heap allocation is bounded below the core0 stack.
+Pixel buffers and gameplay pools allocate no memory per frame. BOOT shares
+flashCS, so its SRAM-only sampler uses coordinated multicore flash lockout.
+The QMI8658A uses synchronized shadow-register reads for coherent 6-axis samples.
+No TE wire is exposed; buffering cannot guarantee synchronized panel scanout.
+
+- [Game implementation and validation](docs/hardware/2026-10-15-game.md)
+- [Controls and IMU details](docs/controls.md)
+- [Gameplay/scoring](docs/gameplay.md)
+- [Original assets and deterministic generator](docs/assets.md)
+- [Earlier board diagnostic results](docs/hardware/2026-10-15-bringup.md)
+- [Display design](docs/research/display-performance.md)
+- [Game research](docs/research/game-reference.md)
+- [Reference index](reference/README.md) and [download provenance](reference/manifest.json)
 - [Third-party notices](THIRD_PARTY.md)
 
-Important integration details: use **GPIO13** for LCD reset, explicitly select
-SPI1, and explicitly set `clk_peri` after changing `clk_sys`. Log achieved SPI
-rates; requesting 40 MHz at 125 MHz yields 31.25 MHz. No TE synchronization wire
-is exposed, so MCU buffering cannot guarantee tear-free panel scanout.
-
-The future game shares portable indexed drawing code between Pico SDK and a
-Sokol desktop host. The diagnostic deliberately establishes the simpler
-single-core RGB565/DMA baseline before the indexed dual-core strip pipeline.
-
-Downloaded references (32 files, about 48 MB) include schematics, datasheets,
-vendor code, arcade manuals, screenshots and flyers. They remain local and
-ignored by Git, with upstream rights retained. The original reference pack
-lives in the original project checkout when working in a linked worktree.
-No arcade ROMs or extracted game assets are included.
+Downloaded references remain local and ignored, with upstream rights retained.
+No arcade ROMs, extracted assets or audio are included. There is no onboard
+speaker. The board's detected 16 MiB flash is linked conservatively as 4 MiB.
+The original flash backup and development captures remain under ignored
+`artifacts/`; the original backup was independently verified over its first 1 MiB,
+which covers all firmware written in this session.

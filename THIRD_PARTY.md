@@ -30,4 +30,25 @@ The companion DEV_Config.h carries this permission (original spelling retained):
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-No original Gyruss ROM, graphics or audio are included in this diagnostic.
+No original Gyruss ROM, graphics or audio are included in this project.
+
+## Sokol desktop host
+
+The optional macOS host uses `sokol_app.h`, `sokol_gfx.h`, `sokol_glue.h`, and
+`util/sokol_gl.h` from [floooh/sokol](https://github.com/floooh/sokol), pinned to
+commit `5e94d1291fea504ed911090338cf35bd9ef49a06`, retrieved 2026-10-15.
+Downloaded headers remain in ignored `.deps/sokol/`; SHA-256 hashes are recorded
+in `dependencies.lock.json`. The headers contain their original zlib/libpng
+license notices, including Copyright (c) Andre Weissflog and contributors.
+Preserve those notices when distributing the headers. The unmodified library
+code is used only by the desktop host, not the RP2040 firmware.
+
+The zlib/libpng terms permit commercial use, modification and redistribution,
+require that origin is not misrepresented, altered versions are marked, and
+the license notice is preserved in source distributions. The software is
+provided as-is without warranty. See the complete notice in each pinned header.
+
+`firmware/linker/sections_stack.incl` and `section_end.incl` adapt the Pico SDK
+2.3.1 BSD-3-Clause linker fragments to reserve an 8 KiB core0 stack in main SRAM.
+Copies of the Pico SDK, TinyUSB and Sokol license notices are retained in
+`LICENSES/` for source and binary distribution.

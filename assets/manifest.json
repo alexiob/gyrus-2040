@@ -1,0 +1,136 @@
+{
+  "palette_entries": 24,
+  "palette_bytes": 512,
+  "font_bytes": 672,
+  "sprite_pixel_bytes": 31621,
+  "frame_descriptors": 120,
+  "sprites": [
+    {
+      "id": "PLAYER",
+      "width": 17,
+      "height": 17,
+      "frames": 32,
+      "pixel_bytes": 9248
+    },
+    {
+      "id": "SCOUT",
+      "width": 15,
+      "height": 15,
+      "frames": 16,
+      "pixel_bytes": 3600
+    },
+    {
+      "id": "FIGHTER",
+      "width": 15,
+      "height": 15,
+      "frames": 16,
+      "pixel_bytes": 3600
+    },
+    {
+      "id": "MOTH",
+      "width": 15,
+      "height": 15,
+      "frames": 16,
+      "pixel_bytes": 3600
+    },
+    {
+      "id": "SATELLITE",
+      "width": 15,
+      "height": 15,
+      "frames": 8,
+      "pixel_bytes": 1800
+    },
+    {
+      "id": "ASTEROID",
+      "width": 15,
+      "height": 15,
+      "frames": 8,
+      "pixel_bytes": 1800
+    },
+    {
+      "id": "LASER_EMITTER",
+      "width": 15,
+      "height": 15,
+      "frames": 8,
+      "pixel_bytes": 1800
+    },
+    {
+      "id": "EXPLOSION",
+      "width": 21,
+      "height": 21,
+      "frames": 6,
+      "pixel_bytes": 2646
+    },
+    {
+      "id": "PLANET_EARTH",
+      "width": 23,
+      "height": 23,
+      "frames": 1,
+      "pixel_bytes": 529
+    },
+    {
+      "id": "PLANET_MARS",
+      "width": 23,
+      "height": 23,
+      "frames": 1,
+      "pixel_bytes": 529
+    },
+    {
+      "id": "PLANET_JUPITER",
+      "width": 23,
+      "height": 23,
+      "frames": 1,
+      "pixel_bytes": 529
+    },
+    {
+      "id": "PLANET_SATURN",
+      "width": 29,
+      "height": 23,
+      "frames": 1,
+      "pixel_bytes": 667
+    },
+    {
+      "id": "PLANET_URANUS",
+      "width": 23,
+      "height": 23,
+      "frames": 1,
+      "pixel_bytes": 529
+    },
+    {
+      "id": "PLANET_NEPTUNE",
+      "width": 23,
+      "height": 23,
+      "frames": 1,
+      "pixel_bytes": 529
+    },
+    {
+      "id": "LIFE",
+      "width": 9,
+      "height": 9,
+      "frames": 1,
+      "pixel_bytes": 81
+    },
+    {
+      "id": "PLAYER_BULLET",
+      "width": 1,
+      "height": 4,
+      "frames": 1,
+      "pixel_bytes": 4
+    },
+    {
+      "id": "ENEMY_BULLET",
+      "width": 3,
+      "height": 3,
+      "frames": 1,
+      "pixel_bytes": 9
+    },
+    {
+      "id": "POWERUP",
+      "width": 11,
+      "height": 11,
+      "frames": 1,
+      "pixel_bytes": 121
+    }
+  ],
+  "notes": "Const data in flash; no decompression or runtime rotation; ordinary RGB565 palette."
+}

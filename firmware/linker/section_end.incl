@@ -1,0 +1,36 @@
+/* Adapted from Pico SDK 2.3.1, BSD-3-Clause. See THIRD_PARTY.md. */
+/* Defines the following symbols for use by code:
+    __StackLimit
+    __StackOneTop, __StackOneBottom
+    __StackTop, __StackBottom
+    __stack (== __StackTop)
+
+    Also defines additional symbols for other compilers/libcs
+*/
+
+SECTIONS
+{
+    /* stack limit is poorly named, but historically is maximum heap ptr */
+    __StackLimit = ADDR(.stack_dummy);
+    __HeapLimit = __StackLimit;
+    __StackOneTop = ORIGIN(SCRATCH_X) + LENGTH(SCRATCH_X);
+    __StackTop = ADDR(.stack_dummy) + SIZEOF(.stack_dummy);
+    __StackOneBottom = __StackOneTop - SIZEOF(.stack1_dummy);
+    __StackBottom = __StackTop - SIZEOF(.stack_dummy);
+    PROVIDE(__stack = __StackTop);
+
+    /* picolibc and LLVM */
+    PROVIDE (__heap_start = __end__);
+    PROVIDE (__heap_end = __HeapLimit);
+    PROVIDE( __tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)) );
+    PROVIDE( __tls_size_align = (__tls_size + __tls_align - 1) & ~(__tls_align - 1));
+    PROVIDE( __arm32_tls_tcb_offset = MAX(8, __tls_align) );
+
+    /* llvm-libc */
+    PROVIDE (_end = __end__);
+    PROVIDE (__llvm_libc_heap_limit = __HeapLimit);
+
+    /* Check if data + heap + stack exceeds RAM limit */
+    ASSERT(__end__ <= __StackLimit, "game data/heap reservation overlaps core0 stack")
+    ASSERT(SIZEOF(.stack_dummy) == 8192, "core0 stack must be 8192 bytes")
+}

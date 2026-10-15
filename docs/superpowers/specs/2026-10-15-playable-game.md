@@ -12,8 +12,8 @@ seeded RNG, independent presentation and no hot-loop heap allocation.
 
 Controls ship with selectable split hold and relative angular drag. BOOT fires.
 RUN/RESET is a physical reset pin and cannot implement short-quit/5s-hold in
-firmware. Offer an on-screen RESET equivalent (tap quit, hold5s reboot) or pause
-menu replacement while preserving the physical hardware reset. Input module
+firmware. The user selected a pause menu with separate Quit and Reboot actions;
+Reboot requires a continuous five-second hold. Input module
 owns debouncing, dead zone, wrap handling and gesture cancellation. Rendered
 controls must use the same hit rectangles as the input module.
 

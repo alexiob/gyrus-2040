@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import urllib.request
 import zipfile
@@ -67,6 +68,16 @@ def main():
             z.extractall(DEPS / 'picotool')
     picotool.chmod(0o755)
     run(picotool, 'version')
+    sokol = LOCK['sokol']
+    for header, checksum in sokol['headers_sha256'].items():
+        cached = download({
+            'filename': 'sokol/' + header,
+            'url': f"https://raw.githubusercontent.com/floooh/sokol/{sokol['commit']}/{header}",
+            'sha256': checksum,
+        })
+        destination = DEPS / 'sokol' / header
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(cached, destination)
     venv = DEPS / 'venv'
     if not venv.exists():
         run(os.sys.executable, '-m', 'venv', venv)

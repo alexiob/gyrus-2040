@@ -1,0 +1,145 @@
+{
+  "date": "2026-10-15",
+  "board_serial": "E463985803302D34",
+  "firmware": "gyrus_game 0.2.0",
+  "uf2_sha256": "3e68a456119d76bbf9e8c8cc6cf32590f9ade542becf2dfa6e0bab99ad06e332",
+  "toolchain": "Arm GNU15.3.Rel2 GCC15.3.1",
+  "pico_sdk": "2.3.1",
+  "tests": {
+    "ctest_suites": 19,
+    "passed": 19,
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "python_unit_tests": 8,
+    "asset_regeneration_files": 24,
+    "asset_regeneration_identical": true
+  },
+  "replay": {
+    "passed": true,
+    "cases": [
+      {
+        "name": "title",
+        "stage": 1,
+        "hash": 4143381234,
+        "frame_crc32": 2669092156
+      },
+      {
+        "name": "intro",
+        "stage": 1,
+        "hash": 2823161518,
+        "frame_crc32": 3256473582
+      },
+      {
+        "name": "combat",
+        "stage": 2,
+        "hash": 3408895811,
+        "frame_crc32": 3948330580
+      },
+      {
+        "name": "chance",
+        "stage": 3,
+        "hash": 3968372475,
+        "frame_crc32": 1971949743
+      },
+      {
+        "name": "lasers",
+        "stage": 6,
+        "hash": 1624392114,
+        "frame_crc32": 1533701835
+      },
+      {
+        "name": "earth",
+        "stage": 23,
+        "hash": 1222964593,
+        "frame_crc32": 3251133236
+      },
+      {
+        "name": "next-route",
+        "stage": 25,
+        "hash": 3524065122,
+        "frame_crc32": 2364145594
+      },
+      {
+        "name": "menu",
+        "stage": 25,
+        "hash": 2255308111,
+        "frame_crc32": 4190770426
+      }
+    ]
+  },
+  "device_native_frame_equality": true,
+  "performance": {
+    "seconds": 10.32431870799337,
+    "fps": 60.05238868885159,
+    "drops": 0,
+    "sim_overruns": 0,
+    "touch_read_decode_failures": 0,
+    "spi_errors": 0,
+    "hardware_last": {
+      "firmware": "gyrus_game",
+      "cpu_hz": 125000000,
+      "peri_hz": 125000000,
+      "spi_hz": 62500000,
+      "display_disabled": false,
+      "display_errors": 0,
+      "rendered_frames": 966,
+      "presented_frames": 965,
+      "dropped_frames": 0,
+      "render_us": 7367,
+      "render_max_us": 7686,
+      "last_present_us": 14379,
+      "max_present_us": 17174,
+      "sim_max_us": 1130,
+      "touch_errors": 0,
+      "touch_irq": 7,
+      "bootsel_read_failures": 0,
+      "sim_overruns": 3,
+      "control_mode": 0,
+      "imu_ok": true,
+      "imu_revision": 124,
+      "motion_age_ms": 9,
+      "accel_mg": [
+        -187,
+        850,
+        -539
+      ],
+      "gyro_mdps": [
+        -1656,
+        -2765,
+        62
+      ]
+    },
+    "phase_last": "title",
+    "tilt_ready": false
+  },
+  "memory": {
+    "elf_text_bytes": 128992,
+    "elf_bss_bytes": 141544,
+    "indexed_frames_bytes": 115200,
+    "rgb565_strips_bytes": 15360,
+    "main_stack_bytes": 8192,
+    "core1_stack_bytes": 4096,
+    "static_main_sram_end": "0x20022fe8",
+    "heap_limit": "0x2003e000",
+    "main_sram_gap_bytes": 110616,
+    "bootsel_callback_address": "0x200000c0"
+  },
+  "physical_acceptance": {
+    "display_clean": true,
+    "touch_steering": true,
+    "boot_fire": true,
+    "pause_resume_mode_quit": true,
+    "autofire": true,
+    "tilt": "awaiting user feedback",
+    "five_second_reboot": "not physically tested"
+  },
+  "limits": [
+    "No TE synchronization; panel scanout can tear.",
+    "Screenshots are rendered framebuffer captures, not camera observations.",
+    "Short idle performance observation; not a thermal or battery endurance test.",
+    "After display transfer fault the game latches display disabled, retaining USB diagnostics.",
+    "IMU-axis direction and five-second reboot require physical acceptance."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {"name": "host", "generator": "Ninja", "binaryDir": "${sourceDir}/build-host", "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug", "GYRUS_SANITIZERS": "ON", "CMAKE_EXE_LINKER_FLAGS": ""}},
+    {"name": "firmware", "generator": "Ninja", "binaryDir": "${sourceDir}/build-rp2040", "cacheVariables": {"GYRUS_BUILD_FIRMWARE": "ON", "CMAKE_BUILD_TYPE": "Release", "CMAKE_EXE_LINKER_FLAGS": "", "PICO_SDK_PATH": "${sourceDir}/.deps/pico-sdk", "PICO_TOOLCHAIN_PATH": "${sourceDir}/.deps/toolchain/bin", "picotool_DIR": "${sourceDir}/.deps/picotool/picotool"}}
+  ],
+  "buildPresets": [{"name": "host", "configurePreset": "host"}, {"name": "firmware", "configurePreset": "firmware"}],
+  "testPresets": [{"name": "host", "configurePreset": "host", "output": {"outputOnFailure": true}}]
+}

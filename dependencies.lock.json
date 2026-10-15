@@ -1,0 +1,6 @@
+{
+  "pico_sdk": {"url": "https://github.com/raspberrypi/pico-sdk.git", "tag": "2.3.1", "commit": "079c6f39023649b154152db30f1d781e884879bc", "tinyusb_commit": "86ad6e56c1700e85f1c5678607a762cfe3aa2f47"},
+  "arm_toolchain": {"version": "15.3.rel2", "filename": "arm-toolchain-complete.pkg", "url": "https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel2/arm-gnu-toolchain-15.3.rel2-darwin-arm64-arm-none-eabi.pkg", "sha256": "779972fa545f738bfbba2ff0ae44d5ad7510b00cfb414702974844ba625412f3"},
+  "picotool": {"version": "2.3.1", "filename": "picotool.zip", "url": "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.3.1-0/picotool-2.3.1-mac.zip", "sha256": "7bb3cea5d9f1b000fc758cf4b54774fda5c16a9899d342ef6b0c30138988793b"},
+  "pyserial": "3.5"
+}

@@ -1,32 +1,71 @@
 # Round Arcade · RP2040
 
-A native C11 arcade engine with **Gyrus** (inspired by Gyruss) and **Tempest**, built for the
+A tiny arcade with two games in one firmware: **Gyrus**, an orbital space shooter
+inspired by Gyruss, and **Tempest**, a vector tube shooter. Both run on a shared
+native C11 engine, built for the
 [Waveshare RP2040-Touch-LCD-1.28](https://www.waveshare.com/wiki/RP2040-Touch-LCD-1.28).
 Play on its round touchscreen, or use the Sokol/Metal desktop simulator and
 portable headless runner for development.
 
 ## Demo
 
+https://github.com/user-attachments/assets/c9fabc5a-87a6-4457-b8e2-3b7ec1dce93b
+
+*Menu + both games · 62 seconds · silent · 720 × 720 at 30 fps · 3.1 MiB.*
+Recorded directly from the native renderer using the same C engine and assets
+as the board. Normal autofire and scripted steering; both games clear their
+first level without invincibility or level skipping. This is a software capture,
+not camera footage of the LCD.
+
+[Download the MP4](docs/media/round-arcade-demo.mp4) ·
+[Capture instructions](docs/media/README.md)
+
+| Time | In the demo |
+| --- | --- |
+| 00:00 | Scroll between graphical game titles, toggle Tempest's style, open Settings. |
+| 00:09 | Gyrus: entrance formations, orbital combat, double fire, and a level warp. |
+| 00:31 | Pause and return to the game menu. |
+| 00:35 | Tempest: web entry, combat, Superzapper, dive, and the next web. |
+
+<details>
+<summary>Earlier Gyrus recording on the physical board</summary>
+
 https://github.com/user-attachments/assets/ca1884a3-ee16-48ce-9918-4bd2ffbf2fec
 
-*On-device gameplay · 35 seconds · silent · 4.0 MiB.*
-The same optimized [MP4 is included in the repository](docs/media/gyrus-2040-demo.mp4).
+The original [on-device demo](docs/media/gyrus-2040-demo.mp4) is also preserved:
+35 seconds, silent, 4.0 MiB. It predates the multi-game launcher.
 
-[Play](#play-on-the-board) · [Build](#build-and-run) · [Flash](#flash-the-board) ·
+</details>
+
+[Play](#play-on-the-board) · [Games](#games) · [Controls](#controls-and-settings) ·
+[Build](#build-and-run) · [Flash](#flash-the-board) ·
 [Debug](#debugging) · [Hardware](#hardware-and-performance) · [Documentation](#documentation)
 
 ## Play on the board
 
-The retro launcher opens at startup. **Swipe left/right** or tap its arrows to
-browse graphical game cards, then tap **PLAY** or press **BOOT**. Each game keeps
-its own high score and difficulty settings during the session.
+The **Round Arcade** menu opens at startup. A horizontal carousel holds a
+graphical title card for each game, with its own animated backdrop and high score.
 
-**Autofire is enabled by default.** Choose a steering mode in **Settings** and
-steer. Tap the centre of the screen to pause. On Tempest's card, tap **STYLE** to
+1. **Swipe left/right** or tap the gold arrows to browse **Gyrus** and **Tempest**.
+2. Open **Settings** to choose steering and tune the selected game's difficulty.
+3. Tap **PLAY** or press **BOOT** to start. **Autofire is already on**; just steer.
+4. Tap the centre during play to pause. **Resume** continues the run;
+   **Quit** returns to the game list so you can switch games.
+
+On Tempest's card, tap **STYLE** to
 choose classic vectors or optional Tempest 2000-inspired neon effects. Both
 styles use the same classic rules.
 
-![Graphical game launcher](docs/media/arcade-launcher.png)
+| Gyrus card | Tempest card, neon selected |
+| --- | --- |
+| ![Round Arcade menu with Gyrus's graphical title and Play and Settings buttons](docs/media/menu-gyrus.png) | ![Round Arcade menu with Tempest's graphical title and classic/neon style selector](docs/media/menu-tempest.png) |
+
+Each game keeps its own high score, fire rate, enemy speed, and presentation
+choice for the current session. Steering and tilt calibration are shared,
+so switching games keeps the same comfortable control setup. Reboot restores
+the defaults and clears these session scores.
+
+## Controls and settings
 
 ### Steering
 
@@ -37,7 +76,7 @@ styles use the same classic rules.
 | **Tilt** | Lower the left or right edge like banking a tray. Hold still for half a second to calibrate in a comfortable pose. |
 
 Settings shows tilt calibration progress and a live steering indicator. The
-small ship arrow at the bottom of the title menu also follows your tilt.
+small ship arrow at the bottom of the game launcher also follows your tilt.
 **Tap that arrow, then hold still, to set a new neutral position.** A fresh
 calibration survives starting or resuming a game.
 
@@ -70,7 +109,16 @@ Use the **− / +** buttons in Settings; no reflash is needed.
 
 Selections survive quitting and starting new games. Reboot restores defaults.
 
+![On-device Settings layout with steering mode, fire rate, enemy speed, tilt sensitivity, and Back](docs/media/arcade-settings.png)
+
+## Games
+
 ### Gyrus
+
+Orbit the screen's edge and fire inward at the enemy formations. Dodge diving
+ships and their shots, collect double fire, and fight from Neptune toward Earth.
+Enemies that fly away during combat return to attack: a wave ends when its
+enemies have been destroyed, not when they leave the screen.
 
 Gyrus includes destination-specific entrance formations, persistent attack/return
 flights, inward fire, diving enemies, meteors,
@@ -84,15 +132,16 @@ The art and timings are authored for this round display. The
 [wave lifecycle study](docs/research/gyruss-waves.md) explain which
 behaviors are supported by the original arcade references.
 
-| Neptune entry | Saturn entry |
+| Orbital combat | Saturn entrance formation |
 | --- | --- |
-| ![Neptune formation](docs/media/gyrus-neptune-formation.png) | ![Saturn formation](docs/media/gyrus-saturn-formation.png) |
+| ![Gyrus gameplay with the player ship, inward shots, and double fire](docs/media/gyrus-combat.png) | ![Saturn formation](docs/media/gyrus-saturn-formation.png) |
 
 ### Tempest
 
 Pilot the claw around the rim of a perspective web. Shoot Flippers, Tankers,
 Spikers, Fuseballs, and Pulsars as they climb toward you. Open webs stop at their
-ends; closed webs wrap around. Destroy enemies, clear a wave, then steer around
+ends; closed webs wrap around. Enemies that reach the rim can pursue and kill
+the claw, so keep moving. Destroy enemies, clear a wave, then steer around
 leftover spikes during the dive into the next web.
 
 The first **Superzapper** use clears eligible enemies; the second destroys one.
@@ -109,9 +158,13 @@ bonus modes. [Gameplay and differences](docs/tempest.md) ·
 [1981 research](docs/research/tempest-arcade.md) ·
 [Tempest 2000 research](docs/research/tempest-2000.md).
 
-| Combat | Web entry | Exit flight |
+| Combat | Spike dive | Exit flight |
 | --- | --- | --- |
-| ![Tempest combat](docs/media/tempest-gameplay.png) | ![Animated web entry](docs/media/tempest-entry.png) | ![Next-web flight](docs/media/tempest-flight.png) |
+| ![Tempest combat with climbing enemies, claw, and Superzapper](docs/media/tempest-combat.png) | ![Tempest's avoid-spikes dive after clearing the web](docs/media/tempest-dive.png) | ![Next-web flight](docs/media/tempest-flight.png) |
+
+The menu, Settings, and combat/dive screenshots above are fresh, lossless
+240 × 240 frames from the native renderer. The Saturn entrance and Tempest exit
+flight are framebuffer captures from the board. See [media details](docs/media/README.md).
 
 ## Shared engine
 

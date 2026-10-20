@@ -57,46 +57,48 @@ Re-recording changes the local MP4 only. Upload the new file as a GitHub video
 attachment and update the README URL and manifest when publishing a replacement.
 An ordinary repository MP4 link does not create GitHub's inline video player.
 
-## Earlier on-device Gyrus demo
+## On-device hardware demo
 
 [gyrus-2040-demo.mp4](gyrus-2040-demo.mp4) is the optimized, silent copy of the
-user-supplied `gyrus-2040.mov`. The full clip is retained.
+user-supplied `gyrus2040.mp4`, replacing the earlier hardware recording.
+The full clip is retained, including the multi-game launcher and Gyrus gameplay.
 
 | Property | Repository version |
 | --- | --- |
-| Duration | 34.57 seconds |
-| Dimensions | 720 × 1280, upright portrait |
+| Duration | 90 seconds; 2,700 frames |
+| Dimensions | 720 × 886, upright portrait |
 | Video | H.264 High, level 3.1; YUV 4:2:0; 30 frames/s |
-| Size | 4,180,112 bytes (4.0 MiB), approximately 93% smaller than the source |
+| Size | 8,194,717 bytes (7.8 MiB), 45.5% smaller than the supplied MP4 |
 | Audio | No audio stream |
 | Startup | MP4 metadata precedes video data (`faststart`) |
 
 Camera/location metadata and auxiliary data tracks are removed. The original
-MOV is not committed.
+source recording is not committed.
 
 The main README's **Original hardware demo** section uses this identical file's
-[GitHub video attachment](https://github.com/user-attachments/assets/ca1884a3-ee16-48ce-9918-4bd2ffbf2fec)
+[GitHub video attachment](https://github.com/user-attachments/assets/1b12b6ab-22a8-436d-94a6-6bd418d0fab9)
 for its inline player. Keeping a copy here makes the demo available with a clone.
 GitHub's player syntax is documented in
 [Attaching files with GitHub CLI](https://docs.github.com/en/github-cli/github-cli/attaching-files-with-github-cli#embedding-a-video).
 
 ### Reproduce the conversion
 
-With FFmpeg installed, replace `SOURCE.mov` with the original recording:
+With FFmpeg installed, replace `SOURCE.mp4` with the supplied recording:
 
 ```sh
-ffmpeg -i SOURCE.mov \
+ffmpeg -i SOURCE.mp4 \
   -map 0:v:0 -an -sn -dn \
-  -vf 'scale=720:-2:flags=lanczos,fps=30,setsar=1' \
-  -c:v libx264 -preset slow -crf 25 -maxrate 1800k -bufsize 3600k \
+  -vf 'scale=720:-2:flags=lanczos,fps=30,setsar=1,sidedata=delete' \
+  -c:v libx264 -preset slow -crf 27 -maxrate 800k -bufsize 1600k \
   -profile:v high -level:v 3.1 -pix_fmt yuv420p -g 60 \
   -map_metadata -1 -map_chapters -1 -movflags +faststart \
   gyrus-2040-demo.mp4
 ```
 
 FFmpeg applies the source's rotation before scaling, so playback does not rely
-on camera orientation metadata. The encoding was checked by decoding the full
-file and probing the resulting streams and MP4 atom order.
+on camera orientation metadata. The bitrate cap keeps this longer clip below
+10 MB for fast inline delivery. The encoding was checked by decoding the full
+file, inspecting sample frames, and probing the resulting streams and MP4 atom order.
 
 ## Shared arcade screenshots
 

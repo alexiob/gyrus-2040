@@ -31,11 +31,11 @@ not camera footage of the LCD.
 
 ### Original hardware demo
 
-https://github.com/user-attachments/assets/ca1884a3-ee16-48ce-9918-4bd2ffbf2fec
+https://github.com/user-attachments/assets/1b12b6ab-22a8-436d-94a6-6bd418d0fab9
 
-*Gyrus running on the physical Waveshare board · 35 seconds · silent · 4.0 MiB.*
-[Download the original on-device demo](docs/media/gyrus-2040-demo.mp4).
-This recording predates the multi-game launcher.
+*Round Arcade on the physical Waveshare board · 90 seconds · silent · 7.8 MiB.*
+[Download the on-device demo](docs/media/gyrus-2040-demo.mp4).
+The recording shows the multi-game launcher and Gyrus gameplay on the device.
 
 [Play](#play-on-the-board) · [Games](#games) · [Controls](#controls-and-settings) ·
 [Build](#build-and-run) · [Flash](#flash-the-board) ·

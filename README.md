@@ -9,6 +9,14 @@ portable headless runner for development.
 
 ## Demo
 
+### Original hardware demo
+
+https://github.com/user-attachments/assets/1b12b6ab-22a8-436d-94a6-6bd418d0fab9
+
+*Round Arcade on the physical Waveshare board · 90 seconds · silent · 7.8 MiB.*
+[Download the on-device demo](docs/media/gyrus-2040-demo.mp4).
+The recording shows the multi-game launcher and Gyrus gameplay on the device.
+
 ### Menu and both games
 
 https://github.com/user-attachments/assets/c9fabc5a-87a6-4457-b8e2-3b7ec1dce93b
@@ -28,14 +36,6 @@ not camera footage of the LCD.
 | 00:09 | Gyrus: entrance formations, orbital combat, double fire, and a level warp. |
 | 00:31 | Pause and return to the game menu. |
 | 00:35 | Tempest: web entry, combat, Superzapper, dive, and the next web. |
-
-### Original hardware demo
-
-https://github.com/user-attachments/assets/1b12b6ab-22a8-436d-94a6-6bd418d0fab9
-
-*Round Arcade on the physical Waveshare board · 90 seconds · silent · 7.8 MiB.*
-[Download the on-device demo](docs/media/gyrus-2040-demo.mp4).
-The recording shows the multi-game launcher and Gyrus gameplay on the device.
 
 [Play](#play-on-the-board) · [Games](#games) · [Controls](#controls-and-settings) ·
 [Build](#build-and-run) · [Flash](#flash-the-board) ·
